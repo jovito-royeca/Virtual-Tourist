@@ -7,6 +7,9 @@
 //
 
 import UIKit
+import CoreLocation
+import MapKit
+
 
 class PhotosViewController: UIViewController {
 

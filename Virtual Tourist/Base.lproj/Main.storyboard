@@ -6,7 +6,7 @@
         <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
     </dependencies>
     <scenes>
-        <!--Map View Controller-->
+        <!--Virtual Tourist-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="MapViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
@@ -52,9 +52,12 @@
                             </mask>
                         </variation>
                     </view>
-                    <navigationItem key="navigationItem" id="9QA-Zb-wKH">
+                    <navigationItem key="navigationItem" title="Virtual Tourist" id="9QA-Zb-wKH">
                         <barButtonItem key="rightBarButtonItem" systemItem="edit" id="237-3f-0HC"/>
                     </navigationItem>
+                    <connections>
+                        <outlet property="mapView" destination="pRU-b3-2yK" id="qof-6W-Z4k"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
@@ -73,8 +76,18 @@
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="obc-1h-yDu">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
-                                <variation key="widthClass=compact" fixedFrame="YES">
-                                    <rect key="frame" x="0.0" y="64" width="400" height="128"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="128" id="bHj-SM-7ge"/>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="bHj-SM-7ge"/>
+                                    </mask>
+                                </variation>
+                                <variation key="widthClass=compact">
+                                    <mask key="constraints">
+                                        <include reference="bHj-SM-7ge"/>
+                                    </mask>
                                 </variation>
                             </mapView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="hBa-7n-4rg">
@@ -96,16 +109,31 @@
                                         </view>
                                     </collectionViewCell>
                                 </cells>
-                                <variation key="widthClass=compact" fixedFrame="YES">
-                                    <rect key="frame" x="0.0" y="192" width="400" height="408"/>
-                                </variation>
                             </collectionView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="obc-1h-yDu" firstAttribute="leading" secondItem="Wc2-FQ-gIe" secondAttribute="leading" id="1Pi-NW-uqO"/>
+                            <constraint firstItem="obc-1h-yDu" firstAttribute="top" secondItem="vy8-Va-ugb" secondAttribute="bottom" id="EJM-3b-1Al"/>
+                            <constraint firstItem="obc-1h-yDu" firstAttribute="trailing" secondItem="hBa-7n-4rg" secondAttribute="trailing" id="Km7-OJ-hNf"/>
+                            <constraint firstAttribute="trailing" secondItem="obc-1h-yDu" secondAttribute="trailing" id="Mgz-DJ-12K"/>
+                            <constraint firstItem="obc-1h-yDu" firstAttribute="leading" secondItem="hBa-7n-4rg" secondAttribute="leading" id="Nre-58-KC6"/>
+                            <constraint firstItem="hBa-7n-4rg" firstAttribute="top" secondItem="obc-1h-yDu" secondAttribute="bottom" id="pIc-sO-sYW"/>
+                            <constraint firstItem="hBa-7n-4rg" firstAttribute="bottom" secondItem="ZSh-B0-gq8" secondAttribute="top" id="yJA-4J-8rj"/>
+                        </constraints>
                         <variation key="default">
                             <mask key="subviews">
                                 <exclude reference="obc-1h-yDu"/>
                                 <exclude reference="hBa-7n-4rg"/>
+                            </mask>
+                            <mask key="constraints">
+                                <exclude reference="1Pi-NW-uqO"/>
+                                <exclude reference="EJM-3b-1Al"/>
+                                <exclude reference="Km7-OJ-hNf"/>
+                                <exclude reference="Mgz-DJ-12K"/>
+                                <exclude reference="Nre-58-KC6"/>
+                                <exclude reference="pIc-sO-sYW"/>
+                                <exclude reference="yJA-4J-8rj"/>
                             </mask>
                         </variation>
                         <variation key="widthClass=compact">
@@ -113,12 +141,21 @@
                                 <include reference="obc-1h-yDu"/>
                                 <include reference="hBa-7n-4rg"/>
                             </mask>
+                            <mask key="constraints">
+                                <include reference="1Pi-NW-uqO"/>
+                                <include reference="EJM-3b-1Al"/>
+                                <include reference="Km7-OJ-hNf"/>
+                                <include reference="Mgz-DJ-12K"/>
+                                <include reference="Nre-58-KC6"/>
+                                <include reference="pIc-sO-sYW"/>
+                                <include reference="yJA-4J-8rj"/>
+                            </mask>
                         </variation>
                     </view>
                     <navigationItem key="navigationItem" id="0GI-36-Dd3">
                         <rightBarButtonItems>
-                            <barButtonItem systemItem="trash" id="F1a-TW-hjK"/>
-                            <barButtonItem systemItem="organize" id="RbY-EI-Djb"/>
+                            <barButtonItem enabled="NO" systemItem="trash" id="F1a-TW-hjK"/>
+                            <barButtonItem image="newFolder" id="RbY-EI-Djb"/>
                         </rightBarButtonItems>
                     </navigationItem>
                 </viewController>
@@ -163,4 +200,7 @@
             <point key="canvasLocation" x="2613" y="984"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="newFolder" width="25" height="25"/>
+    </resources>
 </document>
