@@ -39,5 +39,5 @@ build/
 *.un~
 
 # Pods
-**/Pods/*
+#**/Pods/*
 
