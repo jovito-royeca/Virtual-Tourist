@@ -1,5 +1,5 @@
 //
-//  Location+CoreDataProperties.swift
+//  Pin+CoreDataProperties.swift
 //  Virtual Tourist
 //
 //  Created by Jovit Royeca on 3/17/16.
@@ -12,7 +12,7 @@
 import Foundation
 import CoreData
 
-extension Location {
+extension Pin {
 
     @NSManaged var latitude: NSNumber?
     @NSManaged var longitude: NSNumber?

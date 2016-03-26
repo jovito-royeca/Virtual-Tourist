@@ -26,7 +26,7 @@ class Photo: NSManagedObject {
         let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
         
         // Now we can call an init method that we have inherited from NSManagedObject. Remember that
-        // the Location class is a subclass of NSManagedObject. This inherited init method does the
+        // the Photo class is a subclass of NSManagedObject. This inherited init method does the
         // work of "inserting" our object into the context that was passed in as a parameter
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         

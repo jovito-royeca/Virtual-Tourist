@@ -50,14 +50,14 @@ class MapViewController: UIViewController {
             savedRegion = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
         }
         
-        // load any Locations from Core Data
-        let fetchRequest = NSFetchRequest(entityName: "Location")
+        // load any Pins from Core Data
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
         do {
-            let results = try sharedContext.executeFetchRequest(fetchRequest) as! [Location]
-            for location in results {
-                let point = MKPointAnnotation()
-                point.coordinate = CLLocationCoordinate2DMake(location.latitude!.doubleValue, location.longitude!.doubleValue)
-                mapView.addAnnotation(point)
+            let results = try sharedContext.executeFetchRequest(fetchRequest) as! [Pin]
+            for pin in results {
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2DMake(pin.latitude!.doubleValue, pin.longitude!.doubleValue)
+                mapView.addAnnotation(annotation)
             }
         } catch let error as NSError {
             print("Could not fetch \(error), \(error.userInfo)")
@@ -79,17 +79,17 @@ class MapViewController: UIViewController {
         
         let touchPoint = sender.locationInView(mapView)
         let touchMapCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
-        let point = MKPointAnnotation()
-        point.coordinate = touchMapCoordinate
-        mapView.addAnnotation(point)
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = touchMapCoordinate
+        mapView.addAnnotation(annotation)
         
         let dictionary: [String : AnyObject] = [
-            Location.Keys.Latitude : point.coordinate.latitude,
-            Location.Keys.Longitude : point.coordinate.longitude
+            Pin.Keys.Latitude : annotation.coordinate.latitude,
+            Pin.Keys.Longitude : annotation.coordinate.longitude
         ]
         
         // Now we create a new Location, using the shared Context
-        let _ = Location(dictionary: dictionary, context: sharedContext)
+        let _ = Pin(dictionary: dictionary, context: sharedContext)
         DataManager.sharedInstance().saveContext()
     }
     
@@ -117,14 +117,14 @@ extension MapViewController : MKMapViewDelegate {
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
-        if let pin = mapView.selectedAnnotations.first as? MKPointAnnotation {
+        if let annotation = mapView.selectedAnnotations.first as? MKPointAnnotation {
         
             if editingOn {
-                mapView.removeAnnotation(pin)
+                mapView.removeAnnotation(annotation)
                 
                 // delete Location from Core Data
-                let fetchRequest = NSFetchRequest(entityName: "Location")
-                fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: pin.coordinate.latitude), NSNumber(double: pin.coordinate.longitude))
+                let fetchRequest = NSFetchRequest(entityName: "Pin")
+                fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: annotation.coordinate.latitude), NSNumber(double: annotation.coordinate.longitude))
                 do {
                     let results = try sharedContext.executeFetchRequest(fetchRequest)
                     sharedContext.deleteObject(results.first as! NSManagedObject)
@@ -135,11 +135,11 @@ extension MapViewController : MKMapViewDelegate {
                 
             } else {
                 // deselect so we can select it again upon returning from PhotosViewController
-                mapView.deselectAnnotation(pin, animated: false)
+                mapView.deselectAnnotation(annotation, animated: false)
                 
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("PhotosViewController") as! PhotosViewController
                 controller.region = savedRegion
-                controller.pin = pin
+                controller.annotation = annotation
                 self.navigationController!.pushViewController(controller, animated: true)
             }
         }

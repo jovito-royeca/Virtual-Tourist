@@ -1,5 +1,5 @@
 //
-//  Location.swift
+//  Pin.swift
 //  Virtual Tourist
 //
 //  Created by Jovit Royeca on 3/17/16.
@@ -10,7 +10,7 @@ import Foundation
 import CoreData
 
 
-class Location: NSManagedObject {
+class Pin: NSManagedObject {
     
     struct Keys {
         static let Latitude = "latitude"
@@ -23,10 +23,10 @@ class Location: NSManagedObject {
     }
     
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
-        let entity =  NSEntityDescription.entityForName("Location", inManagedObjectContext: context)!
+        let entity =  NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
         
         // Now we can call an init method that we have inherited from NSManagedObject. Remember that
-        // the Location class is a subclass of NSManagedObject. This inherited init method does the
+        // the Pin class is a subclass of NSManagedObject. This inherited init method does the
         // work of "inserting" our object into the context that was passed in as a parameter
         super.init(entity: entity,insertIntoManagedObjectContext: context)
         

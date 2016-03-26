@@ -20,7 +20,7 @@ class PhotosViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     var region:MKCoordinateRegion?
-    var pin:MKPointAnnotation?
+    var annotation:MKPointAnnotation?
     
     // MARK: Actions
     @IBAction func newButtonAction(sender: UIBarButtonItem) {
@@ -43,7 +43,7 @@ class PhotosViewController: UIViewController {
         super.viewWillAppear(animated)
         mapView.region = region!
         mapView.setCenterCoordinate(region!.center, animated: true)
-        mapView.addAnnotation(pin!)
+        mapView.addAnnotation(annotation!)
     }
     
     private func setupPhotos() {
