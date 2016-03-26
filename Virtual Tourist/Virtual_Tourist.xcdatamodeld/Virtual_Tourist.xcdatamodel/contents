@@ -8,10 +8,13 @@
     </entity>
     <entity name="Photo" representedClassName=".Photo" syncable="YES">
         <attribute name="filePath" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="photoId" optional="YES" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
+        <attribute name="title" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="urlPath" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="location" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Location" inverseName="photos" inverseEntity="Location" syncable="YES"/>
     </entity>
     <elements>
         <element name="Location" positionX="-63" positionY="-18" width="128" height="105"/>
-        <element name="Photo" positionX="-54" positionY="18" width="128" height="75"/>
+        <element name="Photo" positionX="-54" positionY="18" width="128" height="120"/>
     </elements>
 </model>

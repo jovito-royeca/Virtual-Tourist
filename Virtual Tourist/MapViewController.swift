@@ -24,6 +24,7 @@ class MapViewController: UIViewController {
     @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var instructionLabel: UILabel!
+    var savedRegion:MKCoordinateRegion?
     var editingOn = false
     
     // MARK: Overrides
@@ -44,8 +45,9 @@ class MapViewController: UIViewController {
                 
                 let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
                 let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
-                let savedRegion = MKCoordinateRegion(center: center, span: span)
-                mapView.setRegion(savedRegion, animated: true)
+                savedRegion = MKCoordinateRegion(center: center, span: span)
+        } else {
+            savedRegion = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
         }
         
         // load any Locations from Core Data
@@ -60,6 +62,13 @@ class MapViewController: UIViewController {
         } catch let error as NSError {
             print("Could not fetch \(error), \(error.userInfo)")
         }
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        mapView.region = savedRegion!
+        mapView.setCenterCoordinate(savedRegion!.center, animated: true)
     }
     
     // MARK: Actions
@@ -99,15 +108,12 @@ class MapViewController: UIViewController {
 // MARK: MKMapViewDelegate
 extension MapViewController : MKMapViewDelegate {
     func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        let region = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
-        let adjustedRegion = mapView.regionThatFits(region)
-        let center = adjustedRegion.center
-        let span = adjustedRegion.span
+        savedRegion = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
         
-        NSUserDefaults.standardUserDefaults().setDouble(center.latitude, forKey: Keys.Latitude)
-        NSUserDefaults.standardUserDefaults().setDouble(center.longitude, forKey: Keys.Longitude)
-        NSUserDefaults.standardUserDefaults().setDouble(span.latitudeDelta, forKey: Keys.LatitudeDelta)
-        NSUserDefaults.standardUserDefaults().setDouble(span.longitudeDelta, forKey: Keys.LongitudeDelta)
+        NSUserDefaults.standardUserDefaults().setDouble(savedRegion!.center.latitude, forKey: Keys.Latitude)
+        NSUserDefaults.standardUserDefaults().setDouble(savedRegion!.center.longitude, forKey: Keys.Longitude)
+        NSUserDefaults.standardUserDefaults().setDouble(savedRegion!.span.latitudeDelta, forKey: Keys.LatitudeDelta)
+        NSUserDefaults.standardUserDefaults().setDouble(savedRegion!.span.longitudeDelta, forKey: Keys.LongitudeDelta)
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
@@ -128,11 +134,11 @@ extension MapViewController : MKMapViewDelegate {
                 }
                 
             } else {
+                // deselect so we can select it again upon returning from PhotosViewController
+                mapView.deselectAnnotation(pin, animated: false)
+                
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("PhotosViewController") as! PhotosViewController
-                let region = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
-                let adjustedRegion = mapView.regionThatFits(region)
-
-                controller.region = adjustedRegion
+                controller.region = savedRegion
                 controller.pin = pin
                 self.navigationController!.pushViewController(controller, animated: true)
             }

@@ -41,12 +41,8 @@ class PhotosViewController: UIViewController {
 
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
-        mapView.setRegion(region!, animated: false)
-        mapView.addAnnotation(pin!)
-    }
-    
-    private func setupMap() {
-        mapView.setRegion(region!, animated: false)
+        mapView.region = region!
+        mapView.setCenterCoordinate(region!.center, animated: true)
         mapView.addAnnotation(pin!)
     }
     

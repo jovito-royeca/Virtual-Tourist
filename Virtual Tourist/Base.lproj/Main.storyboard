@@ -32,9 +32,6 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
-                                <variation key="widthClass=compact" misplaced="YES">
-                                    <rect key="frame" x="0.0" y="558" width="400" height="42"/>
-                                </variation>
                             </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
@@ -89,6 +86,7 @@
                         <outlet property="editButton" destination="237-3f-0HC" id="4bL-9m-Ju3"/>
                         <outlet property="instructionLabel" destination="ZD7-GG-NvG" id="AlD-mg-Zxl"/>
                         <outlet property="mapView" destination="pRU-b3-2yK" id="qof-6W-Z4k"/>
+                        <segue destination="0kR-yz-znZ" kind="showDetail" id="ptG-Jb-2tu"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -98,9 +96,9 @@
                     </connections>
                 </pongPressGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="1795.5" y="984"/>
+            <point key="canvasLocation" x="1648.5" y="984"/>
         </scene>
-        <!--Photos View Controller-->
+        <!--Photos-->
         <scene sceneID="f3c-8i-QWD">
             <objects>
                 <viewController storyboardIdentifier="PhotosViewController" id="0kR-yz-znZ" customClass="PhotosViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
@@ -211,8 +209,7 @@
                             </mask>
                         </variation>
                     </view>
-                    <navigationItem key="navigationItem" id="W4n-pk-eoF">
-                        <barButtonItem key="backBarButtonItem" title="Ok" id="i2z-Vn-rIf"/>
+                    <navigationItem key="navigationItem" title="Photos" id="W4n-pk-eoF">
                         <rightBarButtonItems>
                             <barButtonItem enabled="NO" systemItem="trash" id="Lj7-AD-hOe">
                                 <connections>
@@ -236,7 +233,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yRs-Iw-gw0" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1795.5" y="1748"/>
+            <point key="canvasLocation" x="2689.5" y="984"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="C1P-c6-5sD">
@@ -255,24 +252,6 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="VIC-Ke-VLI" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="627" y="984"/>
-        </scene>
-        <!--Navigation Controller-->
-        <scene sceneID="H31-oP-EaW">
-            <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="jf8-Ab-Qla" sceneMemberID="viewController">
-                    <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="ShC-Yr-xp7">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                    </navigationBar>
-                    <nil name="viewControllers"/>
-                    <connections>
-                        <segue destination="0kR-yz-znZ" kind="relationship" relationship="rootViewController" id="C9B-yQ-lIk"/>
-                    </connections>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="jHJ-Gw-lro" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="627" y="1748"/>
         </scene>
     </scenes>
     <resources>
