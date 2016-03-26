@@ -26,6 +26,7 @@ class MapViewController: UIViewController {
     @IBOutlet weak var instructionLabel: UILabel!
     var savedRegion:MKCoordinateRegion?
     var editingOn = false
+    var startDragCoordinate:CLLocationCoordinate2D?
     
     // MARK: Overrides
     override func viewDidLoad() {
@@ -141,6 +142,26 @@ extension MapViewController : MKMapViewDelegate {
                 controller.region = savedRegion
                 controller.annotation = annotation
                 self.navigationController!.pushViewController(controller, animated: true)
+            }
+        }
+    }
+    
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+        
+        if newState == .Starting {
+            startDragCoordinate = view.annotation!.coordinate
+        }
+            
+        else if newState == .Ending {
+            let fetchRequest = NSFetchRequest(entityName: "Pin")
+            fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: startDragCoordinate!.latitude), NSNumber(double: startDragCoordinate!.longitude))
+            do {
+                let pin = try sharedContext.executeFetchRequest(fetchRequest).first as! Pin
+                pin.latitude = NSNumber(double: view.annotation!.coordinate.latitude)
+                pin.longitude = NSNumber(double: view.annotation!.coordinate.longitude)
+                DataManager.sharedInstance().saveContext()
+            } catch let error as NSError {
+                print("Could not update \(error), \(error.userInfo)")
             }
         }
     }

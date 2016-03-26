@@ -19,5 +19,6 @@ extension Photo {
     @NSManaged var urlPath: String?
     @NSManaged var filePath: String?
     @NSManaged var pin: Pin?
+    @NSManaged var tags: NSSet?
 
 }
