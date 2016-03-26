@@ -7,16 +7,28 @@
 //
 
 import UIKit
+import CoreData
 import CoreLocation
 import MapKit
 
 
 class MapViewController: UIViewController {
+    
+    @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
+    @IBOutlet weak var instructionLabel: UILabel!
+    var editingOn = false
     
     // MARK: Overrides
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+//        let locationManager = CLLocationManager()
+//        if CLLocationManager.authorizationStatus() == .NotDetermined {
+//            locationManager.requestWhenInUseAuthorization()
+//        }
+    
+        mapView.delegate = self
         
         if let latitude = NSUserDefaults.standardUserDefaults().objectForKey("latitude") as? CLLocationDegrees,
             let longitude = NSUserDefaults.standardUserDefaults().objectForKey("longitude") as? CLLocationDegrees,
@@ -29,19 +41,95 @@ class MapViewController: UIViewController {
                 mapView.setRegion(savedRegion, animated: true)
         }
         
-        mapView.delegate = self
+        // load any Locations from Core Data
+        let fetchRequest = NSFetchRequest(entityName: "Location")
+        do {
+            let results = try sharedContext.executeFetchRequest(fetchRequest)
+            let locations = results as! [Location]
+            for location in locations {
+                let point = MKPointAnnotation()
+                point.coordinate = CLLocationCoordinate2DMake(location.latitude!.doubleValue, location.longitude!.doubleValue)
+                mapView.addAnnotation(point)
+            }
+        } catch let error as NSError {
+            print("Could not fetch \(error), \(error.userInfo)")
+        }
+    }
+    
+    // MARK: Actions
+    @IBAction func longPressAction(sender: UILongPressGestureRecognizer) {
+        if sender.state != .Began || editingOn {
+            return
+        }
+        
+        let touchPoint = sender.locationInView(mapView)
+        let touchMapCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
+        let point = MKPointAnnotation()
+        point.coordinate = touchMapCoordinate
+        mapView.addAnnotation(point)
+        
+        let dictionary: [String : AnyObject] = [
+            Location.Keys.Latitude : point.coordinate.latitude,
+            Location.Keys.Longitude : point.coordinate.longitude
+        ]
+        
+        // Now we create a new Location, using the shared Context
+        let _ = Location(dictionary: dictionary, context: sharedContext)
+        DataManager.sharedInstance().saveContext()
+    }
+    
+    @IBAction func editAction(sender: UIBarButtonItem) {
+        editingOn = !editingOn
+        instructionLabel.hidden = !editingOn
+        editButton.title = editingOn ? "Done" : "Edit"
+    }
+    
+    // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
+    var sharedContext: NSManagedObjectContext {
+        return DataManager.sharedInstance().managedObjectContext
     }
 }
 
 // MARK: MKMapViewDelegate
 extension MapViewController : MKMapViewDelegate {
     func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        let center = mapView.region.center
-        let span = mapView.region.span
+        let region = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
+        let adjustedRegion = mapView.regionThatFits(region)
+        let center = adjustedRegion.center
+        let span = adjustedRegion.span
         
         NSUserDefaults.standardUserDefaults().setDouble(center.latitude, forKey: "latitude")
         NSUserDefaults.standardUserDefaults().setDouble(center.longitude, forKey: "longitude")
         NSUserDefaults.standardUserDefaults().setDouble(span.latitudeDelta, forKey: "latitudeDelta")
         NSUserDefaults.standardUserDefaults().setDouble(span.longitudeDelta, forKey: "longitudeDelta")
+    }
+    
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+        if let pin = mapView.selectedAnnotations.first as? MKPointAnnotation {
+        
+            if editingOn {
+                mapView.removeAnnotation(pin)
+                
+                // delete Location from Core Data
+                let fetchRequest = NSFetchRequest(entityName: "Location")
+                fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: pin.coordinate.latitude), NSNumber(double: pin.coordinate.longitude))
+                do {
+                    let results = try sharedContext.executeFetchRequest(fetchRequest)
+                    sharedContext.deleteObject(results.first as! NSManagedObject)
+                    DataManager.sharedInstance().saveContext()
+                } catch let error as NSError {
+                    print("Could not delete \(error), \(error.userInfo)")
+                }
+                
+            } else {
+                let controller = self.storyboard!.instantiateViewControllerWithIdentifier("PhotosViewController") as! PhotosViewController
+                let region = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
+                let adjustedRegion = mapView.regionThatFits(region)
+
+                controller.region = adjustedRegion
+                controller.pin = pin
+                self.navigationController!.pushViewController(controller, animated: true)
+            }
+        }
     }
 }
