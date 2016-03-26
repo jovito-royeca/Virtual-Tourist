@@ -89,9 +89,13 @@ class MapViewController: UIViewController {
             Pin.Keys.Longitude : annotation.coordinate.longitude
         ]
         
-        // Now we create a new Location, using the shared Context
-        let _ = Pin(dictionary: dictionary, context: sharedContext)
+        // Now we create a new Pin, using the shared Context
+        let pin = Pin(dictionary: dictionary, context: sharedContext)
         DataManager.sharedInstance().saveContext()
+        let failure = { (error: NSError?) in
+            print("error=\(error)")
+        }
+        DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
     }
     
     @IBAction func editAction(sender: UIBarButtonItem) {
@@ -103,6 +107,21 @@ class MapViewController: UIViewController {
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     var sharedContext: NSManagedObjectContext {
         return DataManager.sharedInstance().managedObjectContext
+    }
+    
+    // MARK: Utility methods
+    func findPin(latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> Pin? {
+        var pin:Pin?
+        
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: latitude), NSNumber(double: longitude))
+        do {
+            pin = try sharedContext.executeFetchRequest(fetchRequest).first as? Pin
+        } catch let error as NSError {
+            print("Could not delete \(error), \(error.userInfo)")
+        }
+        
+        return pin
     }
 }
 
@@ -124,14 +143,9 @@ extension MapViewController : MKMapViewDelegate {
                 mapView.removeAnnotation(annotation)
                 
                 // delete Location from Core Data
-                let fetchRequest = NSFetchRequest(entityName: "Pin")
-                fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: annotation.coordinate.latitude), NSNumber(double: annotation.coordinate.longitude))
-                do {
-                    let results = try sharedContext.executeFetchRequest(fetchRequest)
-                    sharedContext.deleteObject(results.first as! NSManagedObject)
+                if let pin = findPin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
+                    sharedContext.deleteObject(pin)
                     DataManager.sharedInstance().saveContext()
-                } catch let error as NSError {
-                    print("Could not delete \(error), \(error.userInfo)")
                 }
                 
             } else {
@@ -146,6 +160,7 @@ extension MapViewController : MKMapViewDelegate {
         }
     }
     
+    // TODO: Implement dragging pins to change location
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         
         if newState == .Starting {
@@ -153,15 +168,10 @@ extension MapViewController : MKMapViewDelegate {
         }
             
         else if newState == .Ending {
-            let fetchRequest = NSFetchRequest(entityName: "Pin")
-            fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: startDragCoordinate!.latitude), NSNumber(double: startDragCoordinate!.longitude))
-            do {
-                let pin = try sharedContext.executeFetchRequest(fetchRequest).first as! Pin
+            if let pin = findPin(startDragCoordinate!.latitude, longitude: startDragCoordinate!.longitude) {
                 pin.latitude = NSNumber(double: view.annotation!.coordinate.latitude)
                 pin.longitude = NSNumber(double: view.annotation!.coordinate.longitude)
                 DataManager.sharedInstance().saveContext()
-            } catch let error as NSError {
-                print("Could not update \(error), \(error.userInfo)")
             }
         }
     }
