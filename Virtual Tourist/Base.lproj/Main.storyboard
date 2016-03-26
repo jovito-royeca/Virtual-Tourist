@@ -100,7 +100,7 @@
             </objects>
             <point key="canvasLocation" x="1795.5" y="984"/>
         </scene>
-        <!--Title-->
+        <!--Photos View Controller-->
         <scene sceneID="f3c-8i-QWD">
             <objects>
                 <viewController storyboardIdentifier="PhotosViewController" id="0kR-yz-znZ" customClass="PhotosViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
@@ -211,7 +211,7 @@
                             </mask>
                         </variation>
                     </view>
-                    <navigationItem key="navigationItem" title="Title" id="W4n-pk-eoF">
+                    <navigationItem key="navigationItem" id="W4n-pk-eoF">
                         <barButtonItem key="backBarButtonItem" title="Ok" id="i2z-Vn-rIf"/>
                         <rightBarButtonItems>
                             <barButtonItem enabled="NO" systemItem="trash" id="Lj7-AD-hOe">

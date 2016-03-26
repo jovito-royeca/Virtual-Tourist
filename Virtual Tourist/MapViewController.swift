@@ -14,6 +14,13 @@ import MapKit
 
 class MapViewController: UIViewController {
     
+    struct Keys {
+        static let Latitude       = "latitude"
+        static let Longitude      = "longitude"
+        static let LatitudeDelta  = "latitudeDelta"
+        static let LongitudeDelta = "longitudeDelta"
+    }
+    
     @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var instructionLabel: UILabel!
@@ -30,10 +37,10 @@ class MapViewController: UIViewController {
     
         mapView.delegate = self
         
-        if let latitude = NSUserDefaults.standardUserDefaults().objectForKey("latitude") as? CLLocationDegrees,
-            let longitude = NSUserDefaults.standardUserDefaults().objectForKey("longitude") as? CLLocationDegrees,
-            let latitudeDelta = NSUserDefaults.standardUserDefaults().objectForKey("latitudeDelta") as? CLLocationDegrees,
-            let longitudeDelta = NSUserDefaults.standardUserDefaults().objectForKey("longitudeDelta") as? CLLocationDegrees {
+        if let latitude = NSUserDefaults.standardUserDefaults().objectForKey(Keys.Latitude) as? CLLocationDegrees,
+            let longitude = NSUserDefaults.standardUserDefaults().objectForKey(Keys.Longitude) as? CLLocationDegrees,
+            let latitudeDelta = NSUserDefaults.standardUserDefaults().objectForKey(Keys.LatitudeDelta) as? CLLocationDegrees,
+            let longitudeDelta = NSUserDefaults.standardUserDefaults().objectForKey(Keys.LongitudeDelta) as? CLLocationDegrees {
                 
                 let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
                 let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
@@ -44,9 +51,8 @@ class MapViewController: UIViewController {
         // load any Locations from Core Data
         let fetchRequest = NSFetchRequest(entityName: "Location")
         do {
-            let results = try sharedContext.executeFetchRequest(fetchRequest)
-            let locations = results as! [Location]
-            for location in locations {
+            let results = try sharedContext.executeFetchRequest(fetchRequest) as! [Location]
+            for location in results {
                 let point = MKPointAnnotation()
                 point.coordinate = CLLocationCoordinate2DMake(location.latitude!.doubleValue, location.longitude!.doubleValue)
                 mapView.addAnnotation(point)
@@ -98,10 +104,10 @@ extension MapViewController : MKMapViewDelegate {
         let center = adjustedRegion.center
         let span = adjustedRegion.span
         
-        NSUserDefaults.standardUserDefaults().setDouble(center.latitude, forKey: "latitude")
-        NSUserDefaults.standardUserDefaults().setDouble(center.longitude, forKey: "longitude")
-        NSUserDefaults.standardUserDefaults().setDouble(span.latitudeDelta, forKey: "latitudeDelta")
-        NSUserDefaults.standardUserDefaults().setDouble(span.longitudeDelta, forKey: "longitudeDelta")
+        NSUserDefaults.standardUserDefaults().setDouble(center.latitude, forKey: Keys.Latitude)
+        NSUserDefaults.standardUserDefaults().setDouble(center.longitude, forKey: Keys.Longitude)
+        NSUserDefaults.standardUserDefaults().setDouble(span.latitudeDelta, forKey: Keys.LatitudeDelta)
+        NSUserDefaults.standardUserDefaults().setDouble(span.longitudeDelta, forKey: Keys.LongitudeDelta)
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
