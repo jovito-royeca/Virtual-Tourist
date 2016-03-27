@@ -11,7 +11,6 @@ import CoreData
 @testable import Virtual_Tourist
 
 class Virtual_TouristTests: XCTestCase {
-    let imagesToDownload = 15
     var imagesDownloaded = 0
     var finished = false
     
@@ -52,7 +51,7 @@ class Virtual_TouristTests: XCTestCase {
             Constants.FlickrParameterKeys.Extras: Constants.FlickrParameterValues.MediumURL,
             Constants.FlickrParameterKeys.Format: Constants.FlickrParameterValues.ResponseFormat,
             Constants.FlickrParameterKeys.NoJSONCallback: Constants.FlickrParameterValues.DisableJSONCallback,
-            "per_page": "\(imagesToDownload)"
+            "per_page": "\(Constants.Flickr.MaxImagesToDownload)"
         ]
         
         let success = { (results: AnyObject!) in
@@ -61,15 +60,12 @@ class Virtual_TouristTests: XCTestCase {
                 if let photos = dict["photos"] as? [String: AnyObject] {
                     if let photo = photos["photo"] as? [[String: AnyObject]] {
                         print("\(photo)")
-                        let setPhotos = NSMutableSet()
                         
                         for d in photo {
-                            setPhotos.addObject(self.findOrCreatePhoto(d))
-                            if let url = NSURL(string: d[Photo.Keys.URLPath] as! String) {
-                                self.downloadImage(url)
+                            if let p = self.findOrCreatePhoto(d, pin: pin!) {
+                                self.downloadPhotoImage(p)
                             }
                         }
-                        pin.photos = setPhotos
                         
                     }  else {
                         print("error: photo key not found")
@@ -93,7 +89,7 @@ class Virtual_TouristTests: XCTestCase {
         } while !finished
     }
     
-    func findOrCreatePin(latitude: Double, longitude: Double) -> Pin {
+    func findOrCreatePin(latitude: Double, longitude: Double) -> Pin? {
             var pin:Pin?
             
             let fetchRequest = NSFetchRequest(entityName: "Pin")
@@ -104,7 +100,8 @@ class Virtual_TouristTests: XCTestCase {
                 } else {
                     let dictionary: [String : AnyObject] = [
                         Pin.Keys.Latitude : latitude,
-                        Pin.Keys.Longitude : longitude
+                        Pin.Keys.Longitude : longitude,
+                        Pin.Keys.PageNumber : 1
                     ]
                     
                     pin = Pin(dictionary: dictionary, context: sharedContext)
@@ -114,10 +111,10 @@ class Virtual_TouristTests: XCTestCase {
                 print("Could not delete \(error), \(error.userInfo)")
             }
             
-            return pin!
+            return pin
     }
     
-    func findOrCreatePhoto(dict: Dictionary<String, AnyObject>) -> Photo {
+    func findOrCreatePhoto(dict: Dictionary<String, AnyObject>, pin: Pin) -> Photo? {
         var photo:Photo?
         
         let fetchRequest = NSFetchRequest(entityName: "Photo")
@@ -132,42 +129,47 @@ class Virtual_TouristTests: XCTestCase {
             } else {
                 photo = Photo(dictionary: dict, context: sharedContext)
             }
+            photo!.pin = pin
             
             DataManager.sharedInstance().saveContext()
         } catch let error as NSError {
             print("Could not delete \(error), \(error.userInfo)")
         }
         
-        return photo!
+        return photo
     }
     
-    func downloadImage(url: NSURL) {
-        let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
-        let fullPath = "\(cacheDirectory.absoluteString)/\(url.lastPathComponent)"
-        
-        if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
-//            let params = NSMutableURLRequest(URL: url)
-//            let data = NSURLConnection.sendSynchronousRequest(<#T##request: NSURLRequest##NSURLRequest#>, returningResponse: <#T##AutoreleasingUnsafeMutablePointer<NSURLResponse?>#>)
-            
-            let httpMethod:HTTPMethod = .Get
-            
-            let success = { (results: AnyObject!) in
-                let image = UIImage(data: results as! NSData)
-                let data = UIImagePNGRepresentation(image!)
-                data!.writeToFile(fullPath, atomically: true)
-                self.imagesDownloaded++
-                
-                if self.imagesDownloaded >= self.imagesToDownload {
-                    self.finished = true
+    func downloadPhotoImage(photo: Photo) {
+        if let urlPath = photo.urlPath,
+           let fullPath = photo.filePath {
+            if let url = NSURL(string: urlPath) {
+
+                if !NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                    //            let params = NSMutableURLRequest(URL: url)
+                    //            let data = NSURLConnection.sendSynchronousRequest(<#T##request: NSURLRequest##NSURLRequest#>, returningResponse: <#T##AutoreleasingUnsafeMutablePointer<NSURLResponse?>#>)
+                    
+                    let httpMethod:HTTPMethod = .Get
+                    
+                    let success = { (results: AnyObject!) in
+                        let image = UIImage(data: results as! NSData)
+                        let data = UIImagePNGRepresentation(image!)
+                        print("writing... \(fullPath)")
+                        data!.writeToFile(fullPath, atomically: true)
+                        self.imagesDownloaded++
+                        
+                        if self.imagesDownloaded >= Constants.Flickr.MaxImagesToDownload {
+                            self.finished = true
+                        }
+                    }
+                    
+                    let failure = { (error: NSError?) in
+                        print("error=\(error)")
+                        self.finished = true
+                    }
+                    
+                    NetworkManager.sharedInstance().exec(httpMethod, urlString: url.absoluteString, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
                 }
             }
-            
-            let failure = { (error: NSError?) in
-                print("error=\(error)")
-                self.finished = true
-            }
-            
-            NetworkManager.sharedInstance().exec(httpMethod, urlString: url.absoluteString, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: true, success: success, failure: failure)
         }
     }
     

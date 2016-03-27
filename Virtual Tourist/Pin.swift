@@ -13,9 +13,9 @@ import CoreData
 class Pin: NSManagedObject {
     
     struct Keys {
-        static let Latitude = "latitude"
-        static let Longitude = "longitude"
-        static let Address = "address"
+        static let Latitude   = "latitude"
+        static let Longitude  = "longitude"
+        static let PageNumber = "pageNumber"
     }
 
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -34,6 +34,6 @@ class Pin: NSManagedObject {
         // dictionary. This works in the same way that it did before we started on Core Data
         latitude = dictionary[Keys.Latitude] as! Double
         longitude = dictionary[Keys.Longitude] as! Double
-        address = dictionary[Keys.Address] as? String
+        pageNumber = dictionary[Keys.PageNumber] as? Int
     }
 }

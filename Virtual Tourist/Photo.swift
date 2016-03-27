@@ -32,8 +32,15 @@ class Photo: NSManagedObject {
         
         // After the Core Data work has been taken care of we can init the properties from the
         // dictionary. This works in the same way that it did before we started on Core Data
-        photoId = dictionary[Keys.PhotoId] as! Int
+        photoId = dictionary[Keys.PhotoId] as? String
         title = dictionary[Keys.Title] as? String
         urlPath = dictionary[Keys.URLPath] as? String
+        
+        if let urlPath = urlPath {
+            if let url = NSURL(string: urlPath) {
+                let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
+                filePath = "\(cacheDirectory.absoluteString)\(url.lastPathComponent!)"
+            }
+        }
     }
 }
