@@ -113,7 +113,7 @@
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="hBa-7n-4rg">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
-                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="K2U-LL-ke7">
+                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="1" minimumInteritemSpacing="1" id="K2U-LL-ke7">
                                     <size key="itemSize" width="126" height="126"/>
                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
@@ -185,13 +185,13 @@
                                 <exclude reference="obc-1h-yDu"/>
                             </mask>
                             <mask key="constraints">
-                                <exclude reference="pIc-sO-sYW"/>
-                                <exclude reference="yJA-4J-8rj"/>
                                 <exclude reference="1Pi-NW-uqO"/>
                                 <exclude reference="EJM-3b-1Al"/>
                                 <exclude reference="Km7-OJ-hNf"/>
                                 <exclude reference="Mgz-DJ-12K"/>
                                 <exclude reference="Nre-58-KC6"/>
+                                <exclude reference="pIc-sO-sYW"/>
+                                <exclude reference="yJA-4J-8rj"/>
                             </mask>
                         </variation>
                         <variation key="widthClass=compact">
@@ -200,13 +200,13 @@
                                 <include reference="obc-1h-yDu"/>
                             </mask>
                             <mask key="constraints">
-                                <include reference="pIc-sO-sYW"/>
-                                <include reference="yJA-4J-8rj"/>
                                 <include reference="1Pi-NW-uqO"/>
                                 <include reference="EJM-3b-1Al"/>
                                 <include reference="Km7-OJ-hNf"/>
                                 <include reference="Mgz-DJ-12K"/>
                                 <include reference="Nre-58-KC6"/>
+                                <include reference="pIc-sO-sYW"/>
+                                <include reference="yJA-4J-8rj"/>
                             </mask>
                         </variation>
                     </view>

@@ -10,7 +10,7 @@ import UIKit
 import CoreData
 import CoreLocation
 import MapKit
-
+import MBProgressHUD
 
 class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate {
 
@@ -53,16 +53,13 @@ class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCollectionView()
-        
+        collectionView.dataSource = self
         
         
         do {
             try fetchedResultsController.performFetch()
         } catch {}
         fetchedResultsController.delegate = self
-        
-        collectionView.dataSource = self
-//        collectionView.reloadData()
     }
 
     override func viewWillAppear(animated: Bool) {
@@ -70,6 +67,16 @@ class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate
         mapView.region = region!
         mapView.setCenterCoordinate(region!.center, animated: true)
         mapView.addAnnotation(annotation!)
+        
+        if let objects = fetchedResultsController.fetchedObjects {
+            if objects.count == 0 {
+                let label = UILabel(frame: CGRectMake(0, collectionView.frame.origin.y+100, view.frame.size.width, 40))
+                label.text = "No Images Found"
+                label.textColor = UIColor.whiteColor()
+                label.textAlignment = .Center
+                collectionView.addSubview(label)
+            }
+        }
     }
     
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
@@ -101,15 +108,18 @@ extension PhotosViewController : UICollectionViewDataSource {
         let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! PhotoCollectionViewCell
+        cell.photoView.image = nil
         
         if let path = DownloadManager.sharedInstance().pathForPhoto(photo) {
             if NSFileManager.defaultManager().fileExistsAtPath(path) {
                 cell.photoView.image = UIImage(contentsOfFile: path)
-                cell.photoView.contentMode = .ScaleToFill
             } else {
+                MBProgressHUD.showHUDAddedTo(cell, animated: true)
+                
                 DownloadManager.sharedInstance().downloadPhotoImage(photo, completion: { (filePath: String) in
                     performUIUpdatesOnMain {
                         collectionView.reloadItemsAtIndexPaths([indexPath])
+                        MBProgressHUD.hideHUDForView(cell, animated: true)
                     }
                 })
             }
