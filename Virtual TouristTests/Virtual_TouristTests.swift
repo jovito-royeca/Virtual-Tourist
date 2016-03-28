@@ -36,6 +36,41 @@ class Virtual_TouristTests: XCTestCase {
         }
     }
     
+    func testImageDownload() {
+        let urlPath = "https://farm2.staticflickr.com/1582/25975763672_64699cdbf5.jpg"
+        
+        
+        if let url = NSURL(string: urlPath) {
+        
+            let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
+            let fullPath = "\(cacheDirectory.path!)/\(url.lastPathComponent!)"
+            
+            if !NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                
+                let httpMethod:HTTPMethod = .Get
+                
+                let success = { (results: AnyObject!) in
+                    let data = results as! NSData
+                    print("writing... \(fullPath)")
+                    data.writeToFile(fullPath, atomically: true)
+                    self.finished = true
+                }
+                
+                let failure = { (error: NSError?) in
+                    print("error=\(error)")
+                    self.finished = true
+                }
+                
+                NetworkManager.sharedInstance().exec(httpMethod, urlString: url.absoluteString, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
+                
+                repeat {
+                    NSRunLoop.currentRunLoop().runMode(NSDefaultRunLoopMode, beforeDate:NSDate.distantFuture())
+                } while !finished
+            }
+        }
+
+    }
+    
     func testFlickr() {
         let lat = 14.6139688454391
         let lon = 121.058349889362
@@ -51,7 +86,7 @@ class Virtual_TouristTests: XCTestCase {
             Constants.FlickrParameterKeys.Extras: Constants.FlickrParameterValues.MediumURL,
             Constants.FlickrParameterKeys.Format: Constants.FlickrParameterValues.ResponseFormat,
             Constants.FlickrParameterKeys.NoJSONCallback: Constants.FlickrParameterValues.DisableJSONCallback,
-            "per_page": "\(Constants.Flickr.MaxImagesToDownload)"
+            "per_page": "3"
         ]
         
         let success = { (results: AnyObject!) in
@@ -74,7 +109,6 @@ class Virtual_TouristTests: XCTestCase {
                     print("error: photos key not found")
                 }
             }
-            self.finished = true
         }
         
         let failure = { (error: NSError?) in
@@ -105,7 +139,7 @@ class Virtual_TouristTests: XCTestCase {
                     ]
                     
                     pin = Pin(dictionary: dictionary, context: sharedContext)
-                    DataManager.sharedInstance().saveContext()
+                    CoreDataManager.sharedInstance().saveContext()
                 }
             } catch let error as NSError {
                 print("Could not delete \(error), \(error.userInfo)")
@@ -131,7 +165,7 @@ class Virtual_TouristTests: XCTestCase {
             }
             photo!.pin = pin
             
-            DataManager.sharedInstance().saveContext()
+            CoreDataManager.sharedInstance().saveContext()
         } catch let error as NSError {
             print("Could not delete \(error), \(error.userInfo)")
         }
@@ -140,36 +174,27 @@ class Virtual_TouristTests: XCTestCase {
     }
     
     func downloadPhotoImage(photo: Photo) {
-        if let urlPath = photo.urlPath,
-           let fullPath = photo.filePath {
-            if let url = NSURL(string: urlPath) {
-
-                if !NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
-                    //            let params = NSMutableURLRequest(URL: url)
-                    //            let data = NSURLConnection.sendSynchronousRequest(<#T##request: NSURLRequest##NSURLRequest#>, returningResponse: <#T##AutoreleasingUnsafeMutablePointer<NSURLResponse?>#>)
-                    
-                    let httpMethod:HTTPMethod = .Get
-                    
-                    let success = { (results: AnyObject!) in
-                        let image = UIImage(data: results as! NSData)
-                        let data = UIImagePNGRepresentation(image!)
-                        print("writing... \(fullPath)")
-                        data!.writeToFile(fullPath, atomically: true)
-                        self.imagesDownloaded++
-                        
-                        if self.imagesDownloaded >= Constants.Flickr.MaxImagesToDownload {
-                            self.finished = true
-                        }
-                    }
-                    
-                    let failure = { (error: NSError?) in
-                        print("error=\(error)")
-                        self.finished = true
-                    }
-                    
-                    NetworkManager.sharedInstance().exec(httpMethod, urlString: url.absoluteString, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
+        if let path = photo.localPath {
+            let httpMethod:HTTPMethod = .Get
+            
+            let success = { (results: AnyObject!) in
+                let data = results as! NSData
+                data.writeToFile(path as String, atomically: true)
+                print("writing... \(path)")
+                
+                self.imagesDownloaded++
+                
+                if self.imagesDownloaded >= 18 {
+                    self.finished = true
                 }
             }
+            
+            let failure = { (error: NSError?) in
+                print("error=\(error)")
+                self.finished = true
+            }
+            
+            NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
         }
     }
     
@@ -182,6 +207,6 @@ class Virtual_TouristTests: XCTestCase {
     }
     
     var sharedContext: NSManagedObjectContext {
-        return DataManager.sharedInstance().managedObjectContext
+        return CoreDataManager.sharedInstance().managedObjectContext
     }
 }

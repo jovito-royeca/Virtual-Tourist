@@ -7,11 +7,12 @@
 //
 
 import UIKit
+import CoreData
 import CoreLocation
 import MapKit
 
 
-class PhotosViewController: UIViewController {
+class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate {
 
     // MARK: properties
     @IBOutlet weak var newButton: UIBarButtonItem!
@@ -21,6 +22,22 @@ class PhotosViewController: UIViewController {
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     var region:MKCoordinateRegion?
     var annotation:MKPointAnnotation?
+    var pin:Pin?
+    
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
+        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "photoId", ascending: true)]
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin!);
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        
+        return fetchedResultsController
+    }()
     
     // MARK: Actions
     @IBAction func newButtonAction(sender: UIBarButtonItem) {
@@ -35,8 +52,17 @@ class PhotosViewController: UIViewController {
     // MARK: Overrides
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupCollectionView()
         
-        setupPhotos()
+        
+        
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {}
+        fetchedResultsController.delegate = self
+        
+        collectionView.dataSource = self
+        collectionView.reloadData()
     }
 
     override func viewWillAppear(animated: Bool) {
@@ -46,14 +72,41 @@ class PhotosViewController: UIViewController {
         mapView.addAnnotation(annotation!)
     }
     
-    private func setupPhotos() {
-        let space: CGFloat = 3.0
+    // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
+    var sharedContext: NSManagedObjectContext {
+        return CoreDataManager.sharedInstance().managedObjectContext
+    }
+    
+    // MARK: Utility methods
+    private func setupCollectionView() {
+        let space: CGFloat = 1.0
         let dimension = (view.frame.size.width - (2*space)) / 3.0
         
         flowLayout.minimumInteritemSpacing = space
         flowLayout.minimumLineSpacing = space
         flowLayout.itemSize = CGSizeMake(dimension, dimension)
+    }
+}
+
+extension PhotosViewController : UICollectionViewDataSource {
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        let sectionInfo = fetchedResultsController.sections![section]
         
-        collectionView.backgroundColor = UIColor.whiteColor()
+        return sectionInfo.numberOfObjects
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let CellIdentifier = "photoCollectionViewCell"
+        
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! PhotoCollectionViewCell
+        
+        if NSFileManager.defaultManager().fileExistsAtPath(photo.localPath as! String) {
+            cell.photoView.image = UIImage(contentsOfFile: photo.localPath as! String)
+            cell.photoView.contentMode = .ScaleToFill
+        }
+        
+        return cell
     }
 }

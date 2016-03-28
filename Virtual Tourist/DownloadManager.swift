@@ -22,7 +22,8 @@ class DownloadManager: NSObject {
             Constants.FlickrParameterKeys.SafeSearch: Constants.FlickrParameterValues.UseSafeSearch,
             Constants.FlickrParameterKeys.Extras: Constants.FlickrParameterValues.MediumURL,
             Constants.FlickrParameterKeys.Format: Constants.FlickrParameterValues.ResponseFormat,
-            Constants.FlickrParameterKeys.NoJSONCallback: Constants.FlickrParameterValues.DisableJSONCallback
+            Constants.FlickrParameterKeys.NoJSONCallback: Constants.FlickrParameterValues.DisableJSONCallback,
+            Constants.FlickrParameterKeys.PerPage: Constants.FlickrParameterValues.PerPageValue
         ]
         
         let success = { (results: AnyObject!) in
@@ -30,16 +31,12 @@ class DownloadManager: NSObject {
                 
                 if let photos = dict["photos"] as? [String: AnyObject] {
                     if let photo = photos["photo"] as? [[String: AnyObject]] {
-                        print("\(photo)")
-                        let setPhotos = NSMutableSet()
                         
                         for d in photo {
-                            setPhotos.addObject(self.findOrCreatePhoto(d))
-                            if let url = NSURL(string: d[Photo.Keys.URLPath] as! String) {
-                                self.downloadImage(url)
+                            if let p = self.findOrCreatePhoto(d, pin: pin) {
+                                self.downloadPhotoImage(p)
                             }
                         }
-                        pin.photos = setPhotos
                         
                     }  else {
                         print("error: photo key not found")
@@ -53,7 +50,7 @@ class DownloadManager: NSObject {
         NetworkManager.sharedInstance().exec(httpMethod, urlString: urlString, headers: nil, parameters: parameters, values: nil, body: nil, dataOffset: 0, isJSON: true, success: success, failure: failure)
     }
     
-    func findOrCreatePin(latitude: Double, longitude: Double) -> Pin {
+    func findOrCreatePin(latitude: Double, longitude: Double) -> Pin? {
         var pin:Pin?
         
         let fetchRequest = NSFetchRequest(entityName: "Pin")
@@ -68,16 +65,16 @@ class DownloadManager: NSObject {
                 ]
                 
                 pin = Pin(dictionary: dictionary, context: sharedContext)
-                DataManager.sharedInstance().saveContext()
+                CoreDataManager.sharedInstance().saveContext()
             }
         } catch let error as NSError {
             print("Could not delete \(error), \(error.userInfo)")
         }
         
-        return pin!
+        return pin
     }
     
-    func findOrCreatePhoto(dict: Dictionary<String, AnyObject>) -> Photo {
+    func findOrCreatePhoto(dict: Dictionary<String, AnyObject>, pin: Pin) -> Photo? {
         var photo:Photo?
         
         let fetchRequest = NSFetchRequest(entityName: "Photo")
@@ -92,33 +89,32 @@ class DownloadManager: NSObject {
             } else {
                 photo = Photo(dictionary: dict, context: sharedContext)
             }
+            photo!.pin = pin
             
-            DataManager.sharedInstance().saveContext()
+            CoreDataManager.sharedInstance().saveContext()
         } catch let error as NSError {
             print("Could not delete \(error), \(error.userInfo)")
         }
         
-        return photo!
+        return photo
     }
     
-    func downloadImage(url: NSURL) {
-        let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
-        let fullPath = "\(cacheDirectory.absoluteString)/\(url.lastPathComponent)"
+    func downloadPhotoImage(photo: Photo) {
         
-        if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+        if let path = photo.localPath {
             let httpMethod:HTTPMethod = .Get
             
             let success = { (results: AnyObject!) in
-                let image = UIImage(data: results as! NSData)
-                let data = UIImagePNGRepresentation(image!)
-                data!.writeToFile(fullPath, atomically: true)
+                let data = results as! NSData
+                data.writeToFile(path as String, atomically: true)
+                print("writing... \(path)")
             }
             
             let failure = { (error: NSError?) in
                 print("error=\(error)")
             }
             
-            NetworkManager.sharedInstance().exec(httpMethod, urlString: url.absoluteString, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: true, success: success, failure: failure)
+            NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
         }
     }
     
@@ -131,7 +127,7 @@ class DownloadManager: NSObject {
     }
     
     private var sharedContext: NSManagedObjectContext {
-        return DataManager.sharedInstance().managedObjectContext
+        return CoreDataManager.sharedInstance().managedObjectContext
     }
     
     // MARK: - Shared Instance

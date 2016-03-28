@@ -11,7 +11,7 @@ import CoreData
 
 private let SQLITE_FILE_NAME = "Virtual Tourist.sqlite"
 
-class DataManager: NSObject {
+class CoreDataManager: NSObject {
 
     // MARK: - The Core Data stack. The code has been moved, unaltered, from the AppDelegate.
     
@@ -77,9 +77,9 @@ class DataManager: NSObject {
     }
     
     // MARK: - Shared Instance
-    class func sharedInstance() -> DataManager {
+    class func sharedInstance() -> CoreDataManager {
         struct Static {
-            static let instance = DataManager()
+            static let instance = CoreDataManager()
         }
         
         return Static.instance

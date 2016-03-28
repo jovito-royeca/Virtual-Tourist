@@ -86,12 +86,13 @@ class MapViewController: UIViewController {
         
         let dictionary: [String : AnyObject] = [
             Pin.Keys.Latitude : annotation.coordinate.latitude,
-            Pin.Keys.Longitude : annotation.coordinate.longitude
+            Pin.Keys.Longitude : annotation.coordinate.longitude,
+            Pin.Keys.PageNumber : 1
         ]
         
         // Now we create a new Pin, using the shared Context
         let pin = Pin(dictionary: dictionary, context: sharedContext)
-        DataManager.sharedInstance().saveContext()
+        CoreDataManager.sharedInstance().saveContext()
         let failure = { (error: NSError?) in
             print("error=\(error)")
         }
@@ -106,23 +107,10 @@ class MapViewController: UIViewController {
     
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
     var sharedContext: NSManagedObjectContext {
-        return DataManager.sharedInstance().managedObjectContext
+        return CoreDataManager.sharedInstance().managedObjectContext
     }
     
     // MARK: Utility methods
-    func findPin(latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> Pin? {
-        var pin:Pin?
-        
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
-        fetchRequest.predicate = NSPredicate(format: "latitude == %@ AND longitude == %@", NSNumber(double: latitude), NSNumber(double: longitude))
-        do {
-            pin = try sharedContext.executeFetchRequest(fetchRequest).first as? Pin
-        } catch let error as NSError {
-            print("Could not delete \(error), \(error.userInfo)")
-        }
-        
-        return pin
-    }
 }
 
 // MARK: MKMapViewDelegate
@@ -143,9 +131,9 @@ extension MapViewController : MKMapViewDelegate {
                 mapView.removeAnnotation(annotation)
                 
                 // delete Location from Core Data
-                if let pin = findPin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
+                if let pin = DownloadManager.sharedInstance().findOrCreatePin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
                     sharedContext.deleteObject(pin)
-                    DataManager.sharedInstance().saveContext()
+                    CoreDataManager.sharedInstance().saveContext()
                 }
                 
             } else {
@@ -155,6 +143,9 @@ extension MapViewController : MKMapViewDelegate {
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("PhotosViewController") as! PhotosViewController
                 controller.region = savedRegion
                 controller.annotation = annotation
+                if let pin = DownloadManager.sharedInstance().findOrCreatePin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
+                    controller.pin = pin
+                }
                 self.navigationController!.pushViewController(controller, animated: true)
             }
         }
@@ -168,10 +159,10 @@ extension MapViewController : MKMapViewDelegate {
         }
             
         else if newState == .Ending {
-            if let pin = findPin(startDragCoordinate!.latitude, longitude: startDragCoordinate!.longitude) {
+            if let pin = DownloadManager.sharedInstance().findOrCreatePin(startDragCoordinate!.latitude, longitude: startDragCoordinate!.longitude) {
                 pin.latitude = NSNumber(double: view.annotation!.coordinate.latitude)
                 pin.longitude = NSNumber(double: view.annotation!.coordinate.longitude)
-                DataManager.sharedInstance().saveContext()
+                CoreDataManager.sharedInstance().saveContext()
             }
         }
     }

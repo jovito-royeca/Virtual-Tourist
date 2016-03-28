@@ -3,6 +3,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
     </dependencies>
@@ -50,13 +51,13 @@
                                 <exclude reference="ZD7-GG-NvG"/>
                             </mask>
                             <mask key="constraints">
+                                <exclude reference="zJh-t5-ls8"/>
+                                <exclude reference="FiV-ik-U3o"/>
+                                <exclude reference="Lhr-ZC-xK5"/>
                                 <exclude reference="0nz-U9-TL0"/>
                                 <exclude reference="GNt-7D-8bN"/>
                                 <exclude reference="UWS-4R-BB6"/>
                                 <exclude reference="an4-RA-jho"/>
-                                <exclude reference="FiV-ik-U3o"/>
-                                <exclude reference="Lhr-ZC-xK5"/>
-                                <exclude reference="zJh-t5-ls8"/>
                             </mask>
                         </variation>
                         <variation key="widthClass=compact">
@@ -65,13 +66,13 @@
                                 <include reference="ZD7-GG-NvG"/>
                             </mask>
                             <mask key="constraints">
+                                <include reference="zJh-t5-ls8"/>
+                                <include reference="FiV-ik-U3o"/>
+                                <include reference="Lhr-ZC-xK5"/>
                                 <include reference="0nz-U9-TL0"/>
                                 <include reference="GNt-7D-8bN"/>
                                 <include reference="UWS-4R-BB6"/>
                                 <include reference="an4-RA-jho"/>
-                                <include reference="FiV-ik-U3o"/>
-                                <include reference="Lhr-ZC-xK5"/>
-                                <include reference="zJh-t5-ls8"/>
                             </mask>
                         </variation>
                     </view>

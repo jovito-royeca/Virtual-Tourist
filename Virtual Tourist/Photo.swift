@@ -35,12 +35,29 @@ class Photo: NSManagedObject {
         photoId = dictionary[Keys.PhotoId] as? String
         title = dictionary[Keys.Title] as? String
         urlPath = dictionary[Keys.URLPath] as? String
+    }
+    
+    var localPath: NSString? {
         
-        if let urlPath = urlPath {
-            if let url = NSURL(string: urlPath) {
-                let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
-                filePath = "\(cacheDirectory.absoluteString)\(url.lastPathComponent!)"
+        // return this format: cacheDir/pin.latXpin.long/file.jpg
+        get {
+            if let urlPath = urlPath {
+                if let url = NSURL(string: urlPath) {
+                    let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
+                    let dir = "\(cacheDirectory.path!)/\(pin!.latitude!)X\(pin!.longitude!)"
+                    
+                    if !NSFileManager.defaultManager().fileExistsAtPath(dir) {
+                        do {
+                            try NSFileManager.defaultManager().createDirectoryAtPath(dir, withIntermediateDirectories: true, attributes: nil)
+                        } catch let error as NSError {
+                            NSLog("\(error.localizedDescription)")
+                        }
+                    }
+                    return "\(dir)/\(url.lastPathComponent!)"
+                }
             }
+            
+            return nil
         }
     }
 }
