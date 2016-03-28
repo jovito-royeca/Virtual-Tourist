@@ -32,11 +32,6 @@ class MapViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        let locationManager = CLLocationManager()
-//        if CLLocationManager.authorizationStatus() == .NotDetermined {
-//            locationManager.requestWhenInUseAuthorization()
-//        }
-    
         mapView.delegate = self
         
         if let latitude = NSUserDefaults.standardUserDefaults().objectForKey(Keys.Latitude) as? CLLocationDegrees,
@@ -47,8 +42,6 @@ class MapViewController: UIViewController {
                 let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
                 let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
                 savedRegion = MKCoordinateRegion(center: center, span: span)
-        } else {
-            savedRegion = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
         }
         
         // load any Pins from Core Data
@@ -68,8 +61,10 @@ class MapViewController: UIViewController {
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
-        mapView.region = savedRegion!
-        mapView.setCenterCoordinate(savedRegion!.center, animated: true)
+        if let savedRegion = savedRegion {
+            mapView.region = savedRegion
+            mapView.setCenterCoordinate(savedRegion.center, animated: true)
+        }
     }
     
     // MARK: Actions
@@ -132,8 +127,10 @@ extension MapViewController : MKMapViewDelegate {
                 
                 // delete Location from Core Data
                 if let pin = DownloadManager.sharedInstance().findOrCreatePin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
+                    DownloadManager.sharedInstance().deleteImagesForPin(pin)
                     sharedContext.deleteObject(pin)
                     CoreDataManager.sharedInstance().saveContext()
+                    
                 }
                 
             } else {

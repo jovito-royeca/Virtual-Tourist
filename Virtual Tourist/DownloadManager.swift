@@ -50,6 +50,34 @@ class DownloadManager: NSObject {
         NetworkManager.sharedInstance().exec(httpMethod, urlString: urlString, headers: nil, parameters: parameters, values: nil, body: nil, dataOffset: 0, isJSON: true, success: success, failure: failure)
     }
     
+    func deleteImagesForPin(pin: Pin) {
+        let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
+        let dir = "\(cacheDirectory.path!)/\(pin.latitude!)X\(pin.longitude!)"
+
+        // remove the image files
+        if let photos = pin.photos {
+            for photo in photos.allObjects as! [Photo] {
+                
+                if let path = photo.localPath {
+                    if NSFileManager.defaultManager().fileExistsAtPath(path as String) {
+                        do {
+                            try NSFileManager.defaultManager().removeItemAtPath(path as String)
+                        } catch let error as NSError {
+                            NSLog("Error deleting... \(error.localizedDescription)")
+                        }
+                    }
+                }
+            }
+        }
+        
+        // remove the directory
+        do {
+            try NSFileManager.defaultManager().removeItemAtPath(dir)
+        } catch let error as NSError {
+            NSLog("Error deleting... \(error.localizedDescription)")
+        }
+    }
+    
     func findOrCreatePin(latitude: Double, longitude: Double) -> Pin? {
         var pin:Pin?
         
