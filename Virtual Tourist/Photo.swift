@@ -13,6 +13,7 @@ import CoreData
 class Photo: NSManagedObject {
 
     struct Keys {
+        static let FilePath  = "filePath"
         static let PhotoId  = "id"
         static let Title    = "title"
         static let URLPath  = "url_m"
@@ -32,32 +33,9 @@ class Photo: NSManagedObject {
         
         // After the Core Data work has been taken care of we can init the properties from the
         // dictionary. This works in the same way that it did before we started on Core Data
+        filePath = dictionary[Keys.FilePath] as? String
         photoId = dictionary[Keys.PhotoId] as? String
         title = dictionary[Keys.Title] as? String
         urlPath = dictionary[Keys.URLPath] as? String
-    }
-    
-    var localPath: NSString? {
-        
-        // return this format: cacheDir/pin.latXpin.long/file.jpg
-        get {
-            if let urlPath = urlPath {
-                if let url = NSURL(string: urlPath) {
-                    let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
-                    let dir = "\(cacheDirectory.path!)/\(pin!.latitude!)X\(pin!.longitude!)"
-                    
-                    if !NSFileManager.defaultManager().fileExistsAtPath(dir) {
-                        do {
-                            try NSFileManager.defaultManager().createDirectoryAtPath(dir, withIntermediateDirectories: true, attributes: nil)
-                        } catch let error as NSError {
-                            NSLog("\(error.localizedDescription)")
-                        }
-                    }
-                    return "\(dir)/\(url.lastPathComponent!)"
-                }
-            }
-            
-            return nil
-        }
     }
 }

@@ -174,27 +174,23 @@ class Virtual_TouristTests: XCTestCase {
     }
     
     func downloadPhotoImage(photo: Photo) {
-        if let path = photo.localPath {
-            let httpMethod:HTTPMethod = .Get
+        if let path = photo.filePath {
             
-            let success = { (results: AnyObject!) in
-                let data = results as! NSData
-                data.writeToFile(path as String, atomically: true)
-                print("writing... \(path)")
+            if !NSFileManager.defaultManager().fileExistsAtPath(path as String) {
+                let httpMethod:HTTPMethod = .Get
                 
-                self.imagesDownloaded++
-                
-                if self.imagesDownloaded >= 18 {
-                    self.finished = true
+                let success = { (results: AnyObject!) in
+                    let data = results as! NSData
+                    data.writeToFile(path as String, atomically: true)
+                    print("writing... \(path)")
                 }
+                
+                let failure = { (error: NSError?) in
+                    print("error=\(error)")
+                }
+                
+                NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
             }
-            
-            let failure = { (error: NSError?) in
-                print("error=\(error)")
-                self.finished = true
-            }
-            
-            NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
         }
     }
     

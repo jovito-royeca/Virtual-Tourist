@@ -14,6 +14,7 @@ import CoreData
 
 extension Photo {
 
+    @NSManaged var filePath: String?
     @NSManaged var photoId: String?
     @NSManaged var title: String?
     @NSManaged var urlPath: String?

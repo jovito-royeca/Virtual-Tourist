@@ -217,7 +217,7 @@
                                     <action selector="deleteButtonAction:" destination="0kR-yz-znZ" id="qRZ-6W-ebJ"/>
                                 </connections>
                             </barButtonItem>
-                            <barButtonItem image="newFolder" id="CqD-ax-GtG">
+                            <barButtonItem systemItem="refresh" id="CqD-ax-GtG">
                                 <connections>
                                     <action selector="newButtonAction:" destination="0kR-yz-znZ" id="6m8-eN-W1V"/>
                                 </connections>
@@ -255,7 +255,4 @@
             <point key="canvasLocation" x="627" y="984"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="newFolder" width="25" height="25"/>
-    </resources>
 </document>

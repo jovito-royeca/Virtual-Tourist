@@ -91,7 +91,12 @@ class MapViewController: UIViewController {
         let failure = { (error: NSError?) in
             print("error=\(error)")
         }
+        
+        // download images for the pin immidiately
         DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
+//        if let pin = DownloadManager.sharedInstance().findOrCreatePin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
+//            DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
+//        }
     }
     
     @IBAction func editAction(sender: UIBarButtonItem) {

@@ -20,7 +20,7 @@ class Tag: NSManagedObject {
     }
     
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
-        let entity =  NSEntityDescription.entityForName("tag", inManagedObjectContext: context)!
+        let entity =  NSEntityDescription.entityForName("Tag", inManagedObjectContext: context)!
         
         // Now we can call an init method that we have inherited from NSManagedObject. Remember that
         // the Tag class is a subclass of NSManagedObject. This inherited init method does the

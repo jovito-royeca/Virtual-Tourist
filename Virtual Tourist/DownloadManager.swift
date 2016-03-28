@@ -34,7 +34,7 @@ class DownloadManager: NSObject {
                         
                         for d in photo {
                             if let p = self.findOrCreatePhoto(d, pin: pin) {
-                                self.downloadPhotoImage(p)
+                                self.downloadPhotoImage(p, completion: nil)
                             }
                         }
                         
@@ -51,17 +51,17 @@ class DownloadManager: NSObject {
     }
     
     func deleteImagesForPin(pin: Pin) {
-        let cacheDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask).first!
-        let dir = "\(cacheDirectory.path!)/\(pin.latitude!)X\(pin.longitude!)"
+        let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
+        let dir = "\(docsDirectory.path!)/\(pin.latitude!)X\(pin.longitude!)"
 
         // remove the image files
         if let photos = pin.photos {
             for photo in photos.allObjects as! [Photo] {
                 
-                if let path = photo.localPath {
-                    if NSFileManager.defaultManager().fileExistsAtPath(path as String) {
+                if let fullPath = pathForPhoto(photo) {
+                    if NSFileManager.defaultManager().fileExistsAtPath(fullPath as String) {
                         do {
-                            try NSFileManager.defaultManager().removeItemAtPath(path as String)
+                            try NSFileManager.defaultManager().removeItemAtPath(fullPath as String)
                         } catch let error as NSError {
                             NSLog("Error deleting... \(error.localizedDescription)")
                         }
@@ -87,9 +87,10 @@ class DownloadManager: NSObject {
             if let p = try sharedContext.executeFetchRequest(fetchRequest).first as? Pin {
                 pin = p
             } else {
-                let dictionary: [String : AnyObject] = [
+                let dictionary = [
                     Pin.Keys.Latitude : latitude,
-                    Pin.Keys.Longitude : longitude
+                    Pin.Keys.Longitude : longitude,
+                    Pin.Keys.PageNumber: 1
                 ]
                 
                 pin = Pin(dictionary: dictionary, context: sharedContext)
@@ -107,7 +108,8 @@ class DownloadManager: NSObject {
         
         let fetchRequest = NSFetchRequest(entityName: "Photo")
         let photoId = dict[Photo.Keys.PhotoId] as? String
-        fetchRequest.predicate = NSPredicate(format: "photoId == %@", photoId!)
+        
+        fetchRequest.predicate = NSPredicate(format: "pin == %@ AND photoId == %@", pin, photoId!)
         do {
             if let p = try sharedContext.executeFetchRequest(fetchRequest).first as? Photo {
                 photo = p
@@ -117,33 +119,100 @@ class DownloadManager: NSObject {
             } else {
                 photo = Photo(dictionary: dict, context: sharedContext)
             }
+            
+            if let urlPath = photo!.urlPath {
+                if let url = NSURL(string: urlPath) {
+                    photo!.filePath = "\(pin.latitude!)X\(pin.longitude!)/\(url.lastPathComponent!)"
+                }
+            }
             photo!.pin = pin
             
             CoreDataManager.sharedInstance().saveContext()
+            
+            if let title = dict[Photo.Keys.Title] as? String {
+                photo!.tags = findOrCreateTags(title)
+                CoreDataManager.sharedInstance().saveContext()
+            }
+            
         } catch let error as NSError {
-            print("Could not delete \(error), \(error.userInfo)")
+            print("Error in fetch \(error), \(error.userInfo)")
         }
         
         return photo
     }
     
-    func downloadPhotoImage(photo: Photo) {
+    func findOrCreateTags(string: String) -> NSSet? {
+        var tags = Array<Tag>()
         
-        if let path = photo.localPath {
-            let httpMethod:HTTPMethod = .Get
+        for component in string.componentsSeparatedByString(" ") {
             
-            let success = { (results: AnyObject!) in
-                let data = results as! NSData
-                data.writeToFile(path as String, atomically: true)
-                print("writing... \(path)")
+            if component.hasPrefix("#") {
+                var tag:Tag?
+                let name = component.substringFromIndex(component.startIndex.advancedBy(1))
+                let fetchRequest = NSFetchRequest(entityName: "Tag")
+                fetchRequest.predicate = NSPredicate(format: "name == %@", name)
+                
+                do {
+                    if let t = try sharedContext.executeFetchRequest(fetchRequest).first as? Tag {
+                        tag = t
+                    } else {
+                        tag = Tag(dictionary: ["name": name], context: sharedContext)
+                    }
+                    tags.append(tag!)
+                    
+                    CoreDataManager.sharedInstance().saveContext()
+                } catch let error as NSError {
+                    print("Could not delete \(error), \(error.userInfo)")
+                }
             }
-            
-            let failure = { (error: NSError?) in
-                print("error=\(error)")
-            }
-            
-            NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
         }
+        
+        return tags.count > 0  ? NSSet(array: tags) : nil
+    }
+    
+    func downloadPhotoImage(photo: Photo, completion: ((filePath: String) -> Void)?) {
+        
+        if let fullPath = pathForPhoto(photo) {
+            // create subdirectory if not yet existing
+            let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
+            let dir = "\(docsDirectory.path!)/\(photo.pin!.latitude!)X\(photo.pin!.longitude!)"
+            if !NSFileManager.defaultManager().fileExistsAtPath(dir) {
+                do {
+                    try NSFileManager.defaultManager().createDirectoryAtPath(dir, withIntermediateDirectories: true, attributes: nil)
+                } catch let error as NSError {
+                    NSLog("Error creating dir... \(error.localizedDescription)")
+                }
+            }
+            
+            if !NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                let httpMethod:HTTPMethod = .Get
+                
+                let success = { (results: AnyObject!) in
+                    let data = results as! NSData
+                    data.writeToFile(fullPath as String, atomically: true)
+                    print("writing... \(fullPath)")
+                    
+                    if let completion = completion {
+                        completion(filePath: fullPath)
+                    }
+                }
+                
+                let failure = { (error: NSError?) in
+                    print("error=\(error)")
+                }
+                
+                NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
+            }
+        }
+    }
+    
+    func pathForPhoto(photo: Photo) -> String? {
+        if let filePath = photo.filePath {
+            let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
+            return "\(docsDirectory.path!)/\(filePath)"
+        }
+        
+        return nil
     }
     
     private func bboxString(latitude: Double, longitude: Double) -> String {

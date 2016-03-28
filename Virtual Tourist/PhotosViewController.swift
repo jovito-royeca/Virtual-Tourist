@@ -62,7 +62,7 @@ class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate
         fetchedResultsController.delegate = self
         
         collectionView.dataSource = self
-        collectionView.reloadData()
+//        collectionView.reloadData()
     }
 
     override func viewWillAppear(animated: Bool) {
@@ -102,9 +102,17 @@ extension PhotosViewController : UICollectionViewDataSource {
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! PhotoCollectionViewCell
         
-        if NSFileManager.defaultManager().fileExistsAtPath(photo.localPath as! String) {
-            cell.photoView.image = UIImage(contentsOfFile: photo.localPath as! String)
-            cell.photoView.contentMode = .ScaleToFill
+        if let path = DownloadManager.sharedInstance().pathForPhoto(photo) {
+            if NSFileManager.defaultManager().fileExistsAtPath(path) {
+                cell.photoView.image = UIImage(contentsOfFile: path)
+                cell.photoView.contentMode = .ScaleToFill
+            } else {
+                DownloadManager.sharedInstance().downloadPhotoImage(photo, completion: { (filePath: String) in
+                    performUIUpdatesOnMain {
+                        collectionView.reloadItemsAtIndexPaths([indexPath])
+                    }
+                })
+            }
         }
         
         return cell
