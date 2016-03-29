@@ -61,6 +61,9 @@
 		8C5C4BE91CA691D100E90560 /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C5C4BE81CA691D100E90560 /* DownloadManager.swift */; };
 		8C5C4BEA1CA691D100E90560 /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C5C4BE81CA691D100E90560 /* DownloadManager.swift */; };
 		8C5C4BEB1CA691D100E90560 /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C5C4BE81CA691D100E90560 /* DownloadManager.swift */; };
+		8CB7E0981CAA4F280056C979 /* PhotoDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB7E0971CAA4F280056C979 /* PhotoDetailsViewController.swift */; };
+		8CB7E0991CAA4F280056C979 /* PhotoDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB7E0971CAA4F280056C979 /* PhotoDetailsViewController.swift */; };
+		8CB7E09A1CAA4F280056C979 /* PhotoDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB7E0971CAA4F280056C979 /* PhotoDetailsViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -115,6 +118,7 @@
 		8C5C4BE01CA686ED00E90560 /* Tag+CoreDataProperties.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Tag+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		8C5C4BE11CA686ED00E90560 /* Tag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tag.swift; sourceTree = "<group>"; };
 		8C5C4BE81CA691D100E90560 /* DownloadManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
+		8CB7E0971CAA4F280056C979 /* PhotoDetailsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoDetailsViewController.swift; sourceTree = "<group>"; };
 		8F353CA6112EB8527A3E6F8F /* Pods_Virtual_TouristUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Virtual_TouristUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		91BC92F9DB1A63B75B0DA326 /* Pods-Virtual Tourist.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Virtual Tourist.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Virtual Tourist/Pods-Virtual Tourist.debug.xcconfig"; sourceTree = "<group>"; };
 		A4FEAF197F3472C1D789B6A4 /* Pods-Virtual Tourist.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Virtual Tourist.release.xcconfig"; path = "Pods/Target Support Files/Pods-Virtual Tourist/Pods-Virtual Tourist.release.xcconfig"; sourceTree = "<group>"; };
@@ -246,6 +250,7 @@
 			children = (
 				8C3E7A181C9A5D4B00A9DC0F /* MapViewController.swift */,
 				8C3E7A1C1C9A5D5B00A9DC0F /* PhotosViewController.swift */,
+				8CB7E0971CAA4F280056C979 /* PhotoDetailsViewController.swift */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -557,6 +562,7 @@
 				8C3251C11C998495009BA563 /* AppDelegate.swift in Sources */,
 				8C0C0D6A1C9BACC60011D2F1 /* NetworkManager.swift in Sources */,
 				8C3E7A271C9A5E7000A9DC0F /* Pin.swift in Sources */,
+				8CB7E0981CAA4F280056C979 /* PhotoDetailsViewController.swift in Sources */,
 				8C0C0D7A1C9BFE9B0011D2F1 /* PhotoCollectionViewCell.swift in Sources */,
 				8C5C4BE51CA686ED00E90560 /* Tag.swift in Sources */,
 				8C0C0D661C9BA6A20011D2F1 /* CoreDataManager.swift in Sources */,
@@ -572,6 +578,7 @@
 				8C5C4BEA1CA691D100E90560 /* DownloadManager.swift in Sources */,
 				8C0C0D7B1C9BFE9B0011D2F1 /* PhotoCollectionViewCell.swift in Sources */,
 				8C3E7A2E1C9A5E7000A9DC0F /* Photo.swift in Sources */,
+				8CB7E0991CAA4F280056C979 /* PhotoDetailsViewController.swift in Sources */,
 				8C0C0D6B1C9BACC60011D2F1 /* NetworkManager.swift in Sources */,
 				8C0C0D671C9BA6A20011D2F1 /* CoreDataManager.swift in Sources */,
 				8C0C0D731C9BAFEC0011D2F1 /* GCDBlackBox.swift in Sources */,
@@ -594,6 +601,7 @@
 				8C5C4BEB1CA691D100E90560 /* DownloadManager.swift in Sources */,
 				8C0C0D7C1C9BFE9B0011D2F1 /* PhotoCollectionViewCell.swift in Sources */,
 				8C3E7A2F1C9A5E7000A9DC0F /* Photo.swift in Sources */,
+				8CB7E09A1CAA4F280056C979 /* PhotoDetailsViewController.swift in Sources */,
 				8C0C0D6C1C9BACC60011D2F1 /* NetworkManager.swift in Sources */,
 				8C0C0D681C9BA6A20011D2F1 /* CoreDataManager.swift in Sources */,
 				8C0C0D741C9BAFEC0011D2F1 /* GCDBlackBox.swift in Sources */,

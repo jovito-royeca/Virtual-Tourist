@@ -22,6 +22,7 @@ class PhotosViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var toolBar: UIToolbar!
+    @IBOutlet weak var deleteButton: UIBarButtonItem!
     
     // MARK: Variables
     var region:MKCoordinateRegion?
@@ -29,6 +30,7 @@ class PhotosViewController: UIViewController {
     var pin:Pin?
     var selectOn = false
     var noImagesLabel:UILabel?
+    var selectedPhotos = Array<Photo>()
     
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
@@ -67,20 +69,45 @@ class PhotosViewController: UIViewController {
             
             pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
             CoreDataManager.sharedInstance().saveContext()
-            DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
+            DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
         }
     }
     
     
     @IBAction func selectButtonAction(sender: UIBarButtonItem) {
         selectOn = !selectOn
+//        navigationController?.navigationBar.Item.backBarButtonItem?.enabled = !selectOn
         refreshButton.enabled = !selectOn
         toolBar.hidden = !selectOn
         selectButton.title = selectOn ? "Cancel" : "Select"
+        
+        if !selectOn {
+            selectedPhotos.removeAll()
+            
+            if let indexPaths = collectionView.indexPathsForSelectedItems() {
+                collectionView.reloadItemsAtIndexPaths(indexPaths)
+            }
+        }
     }
     
     @IBAction func deleteAction(sender: UIBarButtonItem) {
-        
+        if let pin = pin {
+            let failure = { (error: NSError?) in
+                print("Download error... \(error)")
+            }
+            let count = selectedPhotos.count
+            
+            for photo in selectedPhotos {
+                if let p = DownloadManager.sharedInstance().findOrCreatePhoto([Photo.Keys.PhotoId: photo.photoId!], pin: pin) {
+                    sharedContext.deleteObject(p)
+                }
+            }
+            selectedPhotos.removeAll()
+            
+            pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
+            CoreDataManager.sharedInstance().saveContext()
+            DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: count, failure: failure)
+        }
     }
     
     // MARK: Overrides
@@ -88,7 +115,9 @@ class PhotosViewController: UIViewController {
         super.viewDidLoad()
         setupCollectionView()
         collectionView.dataSource = self
-        
+        collectionView.delegate = self
+        collectionView.allowsMultipleSelection = true
+
         do {
             try fetchedResultsController.performFetch()
         } catch {}
@@ -127,14 +156,26 @@ class PhotosViewController: UIViewController {
         flowLayout.itemSize = CGSizeMake(dimension, dimension)
     }
     
-    func configureCell(cell: PhotoCollectionViewCell, photo: Photo) {
-        cell.photoView.image = nil
+    func configureCell(cell: PhotoCollectionViewCell, photo: Photo, indexPath: NSIndexPath) {
+        var isSelected = false
+        for p in selectedPhotos {
+            if p == photo {
+                isSelected = true
+                break
+            }
+        }
+        cell.checkImage.hidden = !isSelected
+
+//        if cell.photoView.image != nil {
+//            return
+//        }
         
         if let fullPath = photo.fullPath {
             if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
                 cell.photoView.image = UIImage(contentsOfFile: fullPath)
                 MBProgressHUD.hideHUDForView(cell, animated: true)
                 cell.hasHUD = false
+                collectionView.reloadItemsAtIndexPaths([indexPath])
                 
             } else {
                 if !cell.hasHUD {
@@ -147,6 +188,7 @@ class PhotosViewController: UIViewController {
                         cell.photoView.image = UIImage(contentsOfFile: filePath)
                         MBProgressHUD.hideHUDForView(cell, animated: true)
                         cell.hasHUD = false
+//                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
                     }
                 })
             }
@@ -154,6 +196,7 @@ class PhotosViewController: UIViewController {
     }
 }
 
+// MARK: UICollectionViewDataSource
 extension PhotosViewController : UICollectionViewDataSource {
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let sectionInfo = fetchedResultsController.sections![section]
@@ -168,11 +211,40 @@ extension PhotosViewController : UICollectionViewDataSource {
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! PhotoCollectionViewCell
         
-        configureCell(cell, photo: photo)
+        configureCell(cell, photo: photo, indexPath: indexPath)
         return cell
     }
 }
 
+// MARK: UICollectionViewDelegate
+extension PhotosViewController : UICollectionViewDelegate {
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCollectionViewCell
+        
+        if selectOn {
+            let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+            cell.checkImage.hidden = false
+            selectedPhotos.append(photo)
+            deleteButton.enabled = true
+        }
+    }
+    
+    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCollectionViewCell
+        
+        if selectOn {
+            let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+            
+            if let index = selectedPhotos.indexOf(photo) {
+                selectedPhotos.removeAtIndex(index)
+            }
+            cell.checkImage.hidden = true
+            deleteButton.enabled = selectedPhotos.count > 0
+        }
+    }
+}
+
+// MARK: NSFetchedResultsControllerDelegate
 extension PhotosViewController : NSFetchedResultsControllerDelegate {
     func controller(controller: NSFetchedResultsController,
         didChangeSection sectionInfo: NSFetchedResultsSectionInfo,
@@ -208,7 +280,7 @@ extension PhotosViewController : NSFetchedResultsControllerDelegate {
                 if let indexPath = indexPath {
                     if let cell = collectionView.cellForItemAtIndexPath(indexPath) {
                         let photo = controller.objectAtIndexPath(indexPath) as! Photo
-                        configureCell(cell as! PhotoCollectionViewCell, photo: photo)
+                        configureCell(cell as! PhotoCollectionViewCell, photo: photo, indexPath: indexPath)
                     }
                 }
                 

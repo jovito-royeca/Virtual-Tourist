@@ -96,7 +96,7 @@ class MapViewController: UIViewController {
         }
         
         // download images for the pin immidiately
-        DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
+        DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
     }
     
     @IBAction func editAction(sender: UIBarButtonItem) {

@@ -11,7 +11,7 @@ import CoreData
 
 class DownloadManager: NSObject {
 
-    func downloadImagesForPin(pin: Pin, failure: (error: NSError?) -> Void) {
+    func downloadImagesForPin(pin: Pin, howMany: Int, failure: (error: NSError?) -> Void) {
         
         let httpMethod:HTTPMethod = .Get
         let urlString = "\(Constants.Flickr.ApiScheme)://\(Constants.Flickr.ApiHost)/\(Constants.Flickr.ApiPath)"
@@ -20,13 +20,11 @@ class DownloadManager: NSObject {
             Constants.FlickrParameterKeys.APIKey: Constants.FlickrParameterValues.APIKey,
             Constants.FlickrParameterKeys.BoundingBox: bboxString(pin.latitude!.doubleValue, longitude: pin.longitude!.doubleValue),
             Constants.FlickrParameterKeys.SafeSearch: Constants.FlickrParameterValues.UseSafeSearch,
-            Constants.FlickrParameterKeys.Extras: Constants.FlickrParameterValues.MediumURL,
             Constants.FlickrParameterKeys.Format: Constants.FlickrParameterValues.ResponseFormat,
             Constants.FlickrParameterKeys.NoJSONCallback: Constants.FlickrParameterValues.DisableJSONCallback,
             Constants.FlickrParameterKeys.Page: "\(pin.pageNumber!)",
-            Constants.FlickrParameterKeys.PerPage: Constants.FlickrParameterValues.PerPageValue
-//            "lat": "\(pin.latitude!)",
-//            "lon": "\(pin.longitude!)",
+            Constants.FlickrParameterKeys.PerPage: "\(howMany)",
+            Constants.FlickrParameterKeys.Extras: Constants.FlickrParameterValues.ExtrasValue
         ]
         
         let success = { (results: AnyObject!) in
@@ -99,8 +97,8 @@ class DownloadManager: NSObject {
                 photo!.pin = pin
                 CoreDataManager.sharedInstance().saveContext()
                 
-                if let title = dict[Photo.Keys.Title] as? String {
-                    photo!.tags = findOrCreateTags(title)
+                if let tags = dict["tags"] as? String {
+                    photo!.tags = findOrCreateTags(tags)
                     CoreDataManager.sharedInstance().saveContext()
                 }
             }
@@ -116,25 +114,21 @@ class DownloadManager: NSObject {
         var tags = Array<Tag>()
         
         for component in string.componentsSeparatedByString(" ") {
+            var tag:Tag?
+            let fetchRequest = NSFetchRequest(entityName: "Tag")
+            fetchRequest.predicate = NSPredicate(format: "name == %@", component)
             
-            if component.hasPrefix("#") {
-                var tag:Tag?
-                let name = component.substringFromIndex(component.startIndex.advancedBy(1))
-                let fetchRequest = NSFetchRequest(entityName: "Tag")
-                fetchRequest.predicate = NSPredicate(format: "name == %@", name)
-                
-                do {
-                    if let t = try sharedContext.executeFetchRequest(fetchRequest).first as? Tag {
-                        tag = t
-                    } else {
-                        tag = Tag(dictionary: ["name": name], context: sharedContext)
-                    }
-                    tags.append(tag!)
-                    
-                    CoreDataManager.sharedInstance().saveContext()
-                } catch let error as NSError {
-                    print("Could not delete \(error), \(error.userInfo)")
+            do {
+                if let t = try sharedContext.executeFetchRequest(fetchRequest).first as? Tag {
+                    tag = t
+                } else {
+                    tag = Tag(dictionary: ["name": component], context: sharedContext)
                 }
+                CoreDataManager.sharedInstance().saveContext()
+                
+                tags.append(tag!)
+            } catch let error as NSError {
+                print("Error in tags... \(error), \(error.userInfo)")
             }
         }
         

@@ -11,5 +11,7 @@ import UIKit
 class PhotoCollectionViewCell: UICollectionViewCell {
 
     @IBOutlet weak var photoView: UIImageView!
+    @IBOutlet weak var checkImage: UIImageView!
     var hasHUD = false
+//    var selectedOn = false
 }
