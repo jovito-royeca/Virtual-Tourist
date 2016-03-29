@@ -182,6 +182,15 @@ class DownloadManager: NSObject {
                 
                 let failure = { (error: NSError?) in
                     print("error=\(error)")
+                    
+                    // delete the file so it can be downloaded again
+                    if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                        do {
+                            try NSFileManager.defaultManager().removeItemAtPath(fullPath)
+                        } catch let error as NSError {
+                            print("Error deleting... \(error.localizedDescription)")
+                        }
+                    }
                 }
                 
                 NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)

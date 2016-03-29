@@ -148,7 +148,7 @@ class PhotosViewController: UIViewController {
     // MARK: Utility methods
     private func setupCollectionView() {
         let space: CGFloat = 1.0
-        let dimension = (view.frame.size.width - (2*space)) / 3.0
+        let dimension = (view.frame.size.width - (3*space)) / 4.0
         
         flowLayout.minimumInteritemSpacing = space
         flowLayout.minimumLineSpacing = space
@@ -164,10 +164,7 @@ class PhotosViewController: UIViewController {
             }
         }
         cell.checkImage.hidden = !isSelected
-
-//        if cell.photoView.image != nil {
-//            return
-//        }
+        cell.photoView.image = nil
         
         if let fullPath = photo.fullPath {
             if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
@@ -221,13 +218,17 @@ extension PhotosViewController : UICollectionViewDataSource {
 // MARK: UICollectionViewDelegate
 extension PhotosViewController : UICollectionViewDelegate {
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCollectionViewCell
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
         if selectOn {
-            let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+            let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCollectionViewCell
             cell.checkImage.hidden = false
             selectedPhotos.append(photo)
             deleteButton.enabled = true
+        } else {
+            let controller = self.storyboard!.instantiateViewControllerWithIdentifier("PhotoDetailsViewController") as! PhotoDetailsViewController
+            controller.photo = photo
+            self.navigationController!.pushViewController(controller, animated: true)
         }
     }
     
