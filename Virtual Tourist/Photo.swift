@@ -13,10 +13,11 @@ import CoreData
 class Photo: NSManagedObject {
 
     struct Keys {
-        static let FilePath  = "filePath"
-        static let PhotoId  = "id"
-        static let Title    = "title"
-        static let URLPath  = "url_m"
+        static let FilePath     = "filePath"
+        static let PhotoId      = "id"
+        static let Title        = "title"
+        static let URLPath      = "url_m"
+        static let Description  = "description"
     }
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -37,6 +38,18 @@ class Photo: NSManagedObject {
         photoId = dictionary[Keys.PhotoId] as? String
         title = dictionary[Keys.Title] as? String
         urlPath = dictionary[Keys.URLPath] as? String
+        
+        // save only non-white space
+        if let desc = dictionary[Keys.Description] as? [String: AnyObject] {
+            if let content = desc["_content"] as? String {
+                let charSet = NSCharacterSet.whitespaceCharacterSet()
+                let trimmedString = content.stringByTrimmingCharactersInSet(charSet)
+                if trimmedString != "" {
+                    description_ = trimmedString
+                }
+            }
+        }
+        
     }
     
     override func prepareForDeletion() {

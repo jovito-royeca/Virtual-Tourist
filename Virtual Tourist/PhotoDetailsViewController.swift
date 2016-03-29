@@ -34,15 +34,20 @@ class PhotoDetailsViewController: UIViewController {
                 navigationItem.title = title
             }
             
+            var string = ""
+            
+            if let description_ = photo.description_ {
+                string = "\(description_)\n\n"
+            }
+            
             if let tags = photo.tags {
-                var tagsString = ""
-                
                 for tag in tags {
                     let t = tag as! Tag
-                    tagsString += "#\(t.name!) "
+                    string += "#\(t.name!) "
                 }
-                tagsLabel.text = tagsString
             }
+            
+            tagsLabel.text = string
         }
     }
 }

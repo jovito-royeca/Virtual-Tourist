@@ -113,6 +113,12 @@ class DownloadManager: NSObject {
     func findOrCreateTags(string: String) -> NSSet? {
         var tags = Array<Tag>()
         
+        let charSet = NSCharacterSet.whitespaceCharacterSet()
+        let trimmedString = string.stringByTrimmingCharactersInSet(charSet)
+        if trimmedString == "" {
+            return NSSet(array: tags)
+        }
+        
         for component in string.componentsSeparatedByString(" ") {
             var tag:Tag?
             let fetchRequest = NSFetchRequest(entityName: "Tag")
@@ -132,7 +138,7 @@ class DownloadManager: NSObject {
             }
         }
         
-        return tags.count > 0  ? NSSet(array: tags) : nil
+        return NSSet(array: tags)
     }
     
     func downloadPhotoImage(photo: Photo, completion: ((filePath: String) -> Void)?) {

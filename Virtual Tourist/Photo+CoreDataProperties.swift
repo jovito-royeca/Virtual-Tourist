@@ -18,6 +18,7 @@ extension Photo {
     @NSManaged var photoId: String?
     @NSManaged var title: String?
     @NSManaged var urlPath: String?
+    @NSManaged var description_: String?
     @NSManaged var pin: Pin?
     @NSManaged var tags: NSSet?
 
