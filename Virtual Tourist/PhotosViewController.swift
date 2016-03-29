@@ -95,8 +95,6 @@ class PhotosViewController: UIViewController {
             let failure = { (error: NSError?) in
                 print("Download error... \(error)")
             }
-            let count = selectedPhotos.count
-            
             for photo in selectedPhotos {
                 if let p = DownloadManager.sharedInstance().findOrCreatePhoto([Photo.Keys.PhotoId: photo.photoId!], pin: pin) {
                     sharedContext.deleteObject(p)
@@ -106,6 +104,7 @@ class PhotosViewController: UIViewController {
             
             pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
             CoreDataManager.sharedInstance().saveContext()
+            let count = pin.photos!.count >= Constants.FlickrParameterValues.PerPageValue ? Constants.FlickrParameterValues.PerPageValue : (Constants.FlickrParameterValues.PerPageValue - pin.photos!.count)
             DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: count, failure: failure)
         }
     }
@@ -172,10 +171,14 @@ class PhotosViewController: UIViewController {
         
         if let fullPath = photo.fullPath {
             if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
-                cell.photoView.image = UIImage(contentsOfFile: fullPath)
-                MBProgressHUD.hideHUDForView(cell, animated: true)
-                cell.hasHUD = false
-                collectionView.reloadItemsAtIndexPaths([indexPath])
+                // let's check if we are reading an image file or a temporary file
+                let imageData = NSData(contentsOfFile: fullPath)
+                if let image = UIImage(data: imageData!) {
+                    cell.photoView.image = image
+                    MBProgressHUD.hideHUDForView(cell, animated: true)
+                    cell.hasHUD = false
+                    collectionView.reloadItemsAtIndexPaths([indexPath])
+                }
                 
             } else {
                 if !cell.hasHUD {
@@ -188,7 +191,6 @@ class PhotosViewController: UIViewController {
                         cell.photoView.image = UIImage(contentsOfFile: filePath)
                         MBProgressHUD.hideHUDForView(cell, animated: true)
                         cell.hasHUD = false
-//                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
                     }
                 })
             }

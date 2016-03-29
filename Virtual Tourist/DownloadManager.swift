@@ -152,11 +152,27 @@ class DownloadManager: NSObject {
             
             // download the image if not yet existing
             if !NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                // let's create a temporary file to mark it as being downloaded
+                let string = "placeholder"
+                let data = NSData(data: string.dataUsingEncoding(NSUTF8StringEncoding)!)
+                NSFileManager.defaultManager().createFileAtPath(fullPath, contents: data, attributes: nil)
+                
+                
                 let httpMethod:HTTPMethod = .Get
                 
                 let success = { (results: AnyObject!) in
-                    let data = results as! NSData
-                    data.writeToFile(fullPath as String, atomically: true)
+                    // delete the temporary file before writing the image data
+                    if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                        do {
+                            try NSFileManager.defaultManager().removeItemAtPath(fullPath)
+                        } catch let error as NSError {
+                            print("Error deleting... \(error.localizedDescription)")
+                        }
+                    }
+
+                    // now let's write the image file
+                    let imageData = results as! NSData
+                    imageData.writeToFile(fullPath as String, atomically: true)
                     print("writing... \(fullPath)")
                     
                     if let completion = completion {
