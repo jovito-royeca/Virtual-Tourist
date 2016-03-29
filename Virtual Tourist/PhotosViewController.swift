@@ -12,17 +12,23 @@ import CoreLocation
 import MapKit
 import MBProgressHUD
 
-class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate {
+class PhotosViewController: UIViewController {
 
-    // MARK: properties
-    @IBOutlet weak var newButton: UIBarButtonItem!
-    @IBOutlet weak var deleteButton: UIBarButtonItem!
+    // MARK: Outlets
+    
+    @IBOutlet weak var refreshButton: UIBarButtonItem!
+    @IBOutlet weak var selectButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    @IBOutlet weak var toolBar: UIToolbar!
+    
+    // MARK: Variables
     var region:MKCoordinateRegion?
     var annotation:MKPointAnnotation?
     var pin:Pin?
+    var selectOn = false
+    var noImagesLabel:UILabel?
     
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
@@ -40,12 +46,40 @@ class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate
     }()
     
     // MARK: Actions
-    @IBAction func newButtonAction(sender: UIBarButtonItem) {
+    @IBAction func refreshButtonAction(sender: UIBarButtonItem) {
+        if let noImagesLabel = noImagesLabel {
+            noImagesLabel.removeFromSuperview()
+        }
         
+        if let pin = pin {
+            let failure = { (error: NSError?) in
+                print("Refresh error... \(error)")
+            }
+            
+            if let photos = pin.photos {
+                for photo in photos.allObjects {
+                    let photoObject = photo as! Photo
+                    if let p = DownloadManager.sharedInstance().findOrCreatePhoto([Photo.Keys.PhotoId: photoObject.photoId!], pin: pin) {
+                        sharedContext.deleteObject(p)
+                    }
+                }
+            }
+            
+            pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
+            CoreDataManager.sharedInstance().saveContext()
+            DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
+        }
     }
     
     
-    @IBAction func deleteButtonAction(sender: UIBarButtonItem) {
+    @IBAction func selectButtonAction(sender: UIBarButtonItem) {
+        selectOn = !selectOn
+        refreshButton.enabled = !selectOn
+        toolBar.hidden = !selectOn
+        selectButton.title = selectOn ? "Cancel" : "Select"
+    }
+    
+    @IBAction func deleteAction(sender: UIBarButtonItem) {
         
     }
     
@@ -54,7 +88,6 @@ class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate
         super.viewDidLoad()
         setupCollectionView()
         collectionView.dataSource = self
-        
         
         do {
             try fetchedResultsController.performFetch()
@@ -70,11 +103,11 @@ class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate
         
         if let objects = fetchedResultsController.fetchedObjects {
             if objects.count == 0 {
-                let label = UILabel(frame: CGRectMake(0, collectionView.frame.origin.y+100, view.frame.size.width, 40))
-                label.text = "No Images Found"
-                label.textColor = UIColor.whiteColor()
-                label.textAlignment = .Center
-                collectionView.addSubview(label)
+                noImagesLabel = UILabel(frame: CGRectMake(0, collectionView.frame.origin.y+100, view.frame.size.width, 40))
+                noImagesLabel!.text = "No Images Found"
+                noImagesLabel!.textColor = UIColor.whiteColor()
+                noImagesLabel!.textAlignment = .Center
+                collectionView.addSubview(noImagesLabel!)
             }
         }
     }
@@ -93,6 +126,32 @@ class PhotosViewController: UIViewController, NSFetchedResultsControllerDelegate
         flowLayout.minimumLineSpacing = space
         flowLayout.itemSize = CGSizeMake(dimension, dimension)
     }
+    
+    func configureCell(cell: PhotoCollectionViewCell, photo: Photo) {
+        cell.photoView.image = nil
+        
+        if let fullPath = photo.fullPath {
+            if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                cell.photoView.image = UIImage(contentsOfFile: fullPath)
+                MBProgressHUD.hideHUDForView(cell, animated: true)
+                cell.hasHUD = false
+                
+            } else {
+                if !cell.hasHUD {
+                    MBProgressHUD.showHUDAddedTo(cell, animated: true)
+                    cell.hasHUD = true
+                }
+                
+                DownloadManager.sharedInstance().downloadPhotoImage(photo, completion: { (filePath: String) in
+                    performUIUpdatesOnMain {
+                        cell.photoView.image = UIImage(contentsOfFile: filePath)
+                        MBProgressHUD.hideHUDForView(cell, animated: true)
+                        cell.hasHUD = false
+                    }
+                })
+            }
+        }
+    }
 }
 
 extension PhotosViewController : UICollectionViewDataSource {
@@ -108,23 +167,55 @@ extension PhotosViewController : UICollectionViewDataSource {
         let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as! PhotoCollectionViewCell
-        cell.photoView.image = nil
         
-        if let path = DownloadManager.sharedInstance().pathForPhoto(photo) {
-            if NSFileManager.defaultManager().fileExistsAtPath(path) {
-                cell.photoView.image = UIImage(contentsOfFile: path)
-            } else {
-                MBProgressHUD.showHUDAddedTo(cell, animated: true)
-                
-                DownloadManager.sharedInstance().downloadPhotoImage(photo, completion: { (filePath: String) in
-                    performUIUpdatesOnMain {
-                        collectionView.reloadItemsAtIndexPaths([indexPath])
-                        MBProgressHUD.hideHUDForView(cell, animated: true)
-                    }
-                })
-            }
-        }
-        
+        configureCell(cell, photo: photo)
         return cell
+    }
+}
+
+extension PhotosViewController : NSFetchedResultsControllerDelegate {
+    func controller(controller: NSFetchedResultsController,
+        didChangeSection sectionInfo: NSFetchedResultsSectionInfo,
+        atIndex sectionIndex: Int,
+        forChangeType type: NSFetchedResultsChangeType) {
+            
+            switch type {
+            case .Insert:
+                collectionView.insertSections(NSIndexSet(index: sectionIndex))
+                
+            case .Delete:
+                collectionView.deleteSections(NSIndexSet(index: sectionIndex))
+                
+            default:
+                return
+            }
+    }
+    
+    func controller(controller: NSFetchedResultsController,
+        didChangeObject anObject: AnyObject,
+        atIndexPath indexPath: NSIndexPath?,
+        forChangeType type: NSFetchedResultsChangeType,
+        newIndexPath: NSIndexPath?) {
+            
+            switch type {
+            case .Insert:
+                collectionView.insertItemsAtIndexPaths([newIndexPath!])
+                
+            case .Delete:
+                collectionView.deleteItemsAtIndexPaths([indexPath!])
+                
+            case .Update:
+                if let indexPath = indexPath {
+                    if let cell = collectionView.cellForItemAtIndexPath(indexPath) {
+                        let photo = controller.objectAtIndexPath(indexPath) as! Photo
+                        configureCell(cell as! PhotoCollectionViewCell, photo: photo)
+                    }
+                }
+                
+            case .Move:
+                collectionView.deleteItemsAtIndexPaths([indexPath!])
+                collectionView.insertItemsAtIndexPaths([newIndexPath!])
+
+            }
     }
 }

@@ -11,5 +11,5 @@ import UIKit
 class PhotoCollectionViewCell: UICollectionViewCell {
 
     @IBOutlet weak var photoView: UIImageView!
-    
+    var hasHUD = false
 }

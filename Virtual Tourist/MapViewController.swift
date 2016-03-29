@@ -21,9 +21,12 @@ class MapViewController: UIViewController {
         static let LongitudeDelta = "longitudeDelta"
     }
     
+    // MARK: Outlets
     @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var instructionLabel: UILabel!
+    
+    // MARK: Variables
     var savedRegion:MKCoordinateRegion?
     var editingOn = false
     var startDragCoordinate:CLLocationCoordinate2D?
@@ -94,9 +97,6 @@ class MapViewController: UIViewController {
         
         // download images for the pin immidiately
         DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
-//        if let pin = DownloadManager.sharedInstance().findOrCreatePin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
-//            DownloadManager.sharedInstance().downloadImagesForPin(pin, failure: failure)
-//        }
     }
     
     @IBAction func editAction(sender: UIBarButtonItem) {
@@ -132,10 +132,13 @@ extension MapViewController : MKMapViewDelegate {
                 
                 // delete Location from Core Data
                 if let pin = DownloadManager.sharedInstance().findOrCreatePin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
-                    DownloadManager.sharedInstance().deleteImagesForPin(pin)
+                    if let photos = pin.photos {
+                        for photo in photos.allObjects {
+                            sharedContext.deleteObject(photo as! NSManagedObject)
+                        }
+                    }
                     sharedContext.deleteObject(pin)
                     CoreDataManager.sharedInstance().saveContext()
-                    
                 }
                 
             } else {

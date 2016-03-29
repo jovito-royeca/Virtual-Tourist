@@ -38,4 +38,29 @@ class Photo: NSManagedObject {
         title = dictionary[Keys.Title] as? String
         urlPath = dictionary[Keys.URLPath] as? String
     }
+    
+    override func prepareForDeletion() {
+        // delete the image file
+        if let fullPath = fullPath {
+            if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
+                do {
+                    print("deleting... \(fullPath)")
+                    try NSFileManager.defaultManager().removeItemAtPath(fullPath)
+                } catch let error as NSError {
+                    print("Error deleting... \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    var fullPath: String? {
+        
+        get {
+            if let filePath = filePath {
+                let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
+                return "\(docsDirectory.path!)/\(filePath)"
+            }
+            return nil
+        }
+    }
 }

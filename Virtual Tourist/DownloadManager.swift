@@ -23,7 +23,10 @@ class DownloadManager: NSObject {
             Constants.FlickrParameterKeys.Extras: Constants.FlickrParameterValues.MediumURL,
             Constants.FlickrParameterKeys.Format: Constants.FlickrParameterValues.ResponseFormat,
             Constants.FlickrParameterKeys.NoJSONCallback: Constants.FlickrParameterValues.DisableJSONCallback,
+            Constants.FlickrParameterKeys.Page: "\(pin.pageNumber!)",
             Constants.FlickrParameterKeys.PerPage: Constants.FlickrParameterValues.PerPageValue
+//            "lat": "\(pin.latitude!)",
+//            "lon": "\(pin.longitude!)",
         ]
         
         let success = { (results: AnyObject!) in
@@ -48,34 +51,6 @@ class DownloadManager: NSObject {
         }
         
         NetworkManager.sharedInstance().exec(httpMethod, urlString: urlString, headers: nil, parameters: parameters, values: nil, body: nil, dataOffset: 0, isJSON: true, success: success, failure: failure)
-    }
-    
-    func deleteImagesForPin(pin: Pin) {
-        let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
-        let dir = "\(docsDirectory.path!)/\(pin.latitude!)X\(pin.longitude!)"
-
-        // remove the image files
-        if let photos = pin.photos {
-            for photo in photos.allObjects as! [Photo] {
-                
-                if let fullPath = pathForPhoto(photo) {
-                    if NSFileManager.defaultManager().fileExistsAtPath(fullPath as String) {
-                        do {
-                            try NSFileManager.defaultManager().removeItemAtPath(fullPath as String)
-                        } catch let error as NSError {
-                            NSLog("Error deleting... \(error.localizedDescription)")
-                        }
-                    }
-                }
-            }
-        }
-        
-        // remove the directory
-        do {
-            try NSFileManager.defaultManager().removeItemAtPath(dir)
-        } catch let error as NSError {
-            NSLog("Error deleting... \(error.localizedDescription)")
-        }
     }
     
     func findOrCreatePin(latitude: Double, longitude: Double) -> Pin? {
@@ -113,25 +88,21 @@ class DownloadManager: NSObject {
         do {
             if let p = try sharedContext.executeFetchRequest(fetchRequest).first as? Photo {
                 photo = p
-                photo!.title = dict[Photo.Keys.Title] as? String
-                photo!.urlPath = dict[Photo.Keys.URLPath] as? String
                 
             } else {
                 photo = Photo(dictionary: dict, context: sharedContext)
-            }
-            
-            if let urlPath = photo!.urlPath {
-                if let url = NSURL(string: urlPath) {
-                    photo!.filePath = "\(pin.latitude!)X\(pin.longitude!)/\(url.lastPathComponent!)"
+                if let urlPath = photo!.urlPath {
+                    if let url = NSURL(string: urlPath) {
+                        photo!.filePath = "\(pin.latitude!)X\(pin.longitude!)/\(url.lastPathComponent!)"
+                    }
                 }
-            }
-            photo!.pin = pin
-            
-            CoreDataManager.sharedInstance().saveContext()
-            
-            if let title = dict[Photo.Keys.Title] as? String {
-                photo!.tags = findOrCreateTags(title)
+                photo!.pin = pin
                 CoreDataManager.sharedInstance().saveContext()
+                
+                if let title = dict[Photo.Keys.Title] as? String {
+                    photo!.tags = findOrCreateTags(title)
+                    CoreDataManager.sharedInstance().saveContext()
+                }
             }
             
         } catch let error as NSError {
@@ -171,19 +142,21 @@ class DownloadManager: NSObject {
     }
     
     func downloadPhotoImage(photo: Photo, completion: ((filePath: String) -> Void)?) {
-        
-        if let fullPath = pathForPhoto(photo) {
-            // create subdirectory if not yet existing
+        if let filePath = photo.filePath {
             let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
-            let dir = "\(docsDirectory.path!)/\(photo.pin!.latitude!)X\(photo.pin!.longitude!)"
-            if !NSFileManager.defaultManager().fileExistsAtPath(dir) {
+            let fullPath = "\(docsDirectory.path!)/\(filePath)"
+            
+            // create subdirectory if not yet existing
+            let subdir = "\(docsDirectory.path!)/\(photo.pin!.latitude!)X\(photo.pin!.longitude!)"
+            if !NSFileManager.defaultManager().fileExistsAtPath(subdir) {
                 do {
-                    try NSFileManager.defaultManager().createDirectoryAtPath(dir, withIntermediateDirectories: true, attributes: nil)
+                    try NSFileManager.defaultManager().createDirectoryAtPath(subdir, withIntermediateDirectories: true, attributes: nil)
                 } catch let error as NSError {
-                    NSLog("Error creating dir... \(error.localizedDescription)")
+                    print("Error creating dir... \(error.localizedDescription)")
                 }
             }
             
+            // download the image if not yet existing
             if !NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
                 let httpMethod:HTTPMethod = .Get
                 
@@ -202,17 +175,13 @@ class DownloadManager: NSObject {
                 }
                 
                 NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
+                
+            } else {
+                if let completion = completion {
+                    completion(filePath: fullPath)
+                }
             }
         }
-    }
-    
-    func pathForPhoto(photo: Photo) -> String? {
-        if let filePath = photo.filePath {
-            let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
-            return "\(docsDirectory.path!)/\(filePath)"
-        }
-        
-        return nil
     }
     
     private func bboxString(latitude: Double, longitude: Double) -> String {

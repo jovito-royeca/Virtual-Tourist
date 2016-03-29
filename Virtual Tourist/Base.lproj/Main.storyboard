@@ -3,7 +3,6 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
-        <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
     </dependencies>
@@ -37,13 +36,14 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="pRU-b3-2yK" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" id="0nz-U9-TL0"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="ZD7-GG-NvG" secondAttribute="trailing" constant="-20" id="FiV-ik-U3o"/>
-                            <constraint firstItem="pRU-b3-2yK" firstAttribute="bottom" secondItem="wfy-db-euE" secondAttribute="top" id="GNt-7D-8bN"/>
-                            <constraint firstItem="ZD7-GG-NvG" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-20" id="Lhr-ZC-xK5"/>
-                            <constraint firstItem="pRU-b3-2yK" firstAttribute="trailing" secondItem="ZD7-GG-NvG" secondAttribute="trailing" id="UWS-4R-BB6"/>
-                            <constraint firstItem="pRU-b3-2yK" firstAttribute="leading" secondItem="ZD7-GG-NvG" secondAttribute="leading" id="an4-RA-jho"/>
-                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="ZD7-GG-NvG" secondAttribute="bottom" id="zJh-t5-ls8"/>
+                            <constraint firstItem="pRU-b3-2yK" firstAttribute="bottom" secondItem="wfy-db-euE" secondAttribute="top" id="9MO-wj-J6x"/>
+                            <constraint firstItem="ZD7-GG-NvG" firstAttribute="bottom" secondItem="wfy-db-euE" secondAttribute="top" id="ALt-kF-fRO"/>
+                            <constraint firstAttribute="trailing" secondItem="pRU-b3-2yK" secondAttribute="trailing" id="Ecn-XR-dfx"/>
+                            <constraint firstItem="pRU-b3-2yK" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" id="NnH-D1-OYU"/>
+                            <constraint firstItem="pRU-b3-2yK" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="Yfm-P6-faN"/>
+                            <constraint firstItem="ZD7-GG-NvG" firstAttribute="leading" secondItem="pRU-b3-2yK" secondAttribute="leading" id="i51-Cl-Uo8"/>
+                            <constraint firstItem="ZD7-GG-NvG" firstAttribute="trailing" secondItem="pRU-b3-2yK" secondAttribute="trailing" id="ncm-VD-DCv"/>
+                            <constraint firstItem="ZD7-GG-NvG" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="514" id="qSm-Jo-ba6"/>
                         </constraints>
                         <variation key="default">
                             <mask key="subviews">
@@ -51,13 +51,14 @@
                                 <exclude reference="ZD7-GG-NvG"/>
                             </mask>
                             <mask key="constraints">
-                                <exclude reference="zJh-t5-ls8"/>
-                                <exclude reference="FiV-ik-U3o"/>
-                                <exclude reference="Lhr-ZC-xK5"/>
-                                <exclude reference="0nz-U9-TL0"/>
-                                <exclude reference="GNt-7D-8bN"/>
-                                <exclude reference="UWS-4R-BB6"/>
-                                <exclude reference="an4-RA-jho"/>
+                                <exclude reference="9MO-wj-J6x"/>
+                                <exclude reference="Ecn-XR-dfx"/>
+                                <exclude reference="NnH-D1-OYU"/>
+                                <exclude reference="Yfm-P6-faN"/>
+                                <exclude reference="ALt-kF-fRO"/>
+                                <exclude reference="i51-Cl-Uo8"/>
+                                <exclude reference="ncm-VD-DCv"/>
+                                <exclude reference="qSm-Jo-ba6"/>
                             </mask>
                         </variation>
                         <variation key="widthClass=compact">
@@ -66,13 +67,14 @@
                                 <include reference="ZD7-GG-NvG"/>
                             </mask>
                             <mask key="constraints">
-                                <include reference="zJh-t5-ls8"/>
-                                <include reference="FiV-ik-U3o"/>
-                                <include reference="Lhr-ZC-xK5"/>
-                                <include reference="0nz-U9-TL0"/>
-                                <include reference="GNt-7D-8bN"/>
-                                <include reference="UWS-4R-BB6"/>
-                                <include reference="an4-RA-jho"/>
+                                <include reference="9MO-wj-J6x"/>
+                                <include reference="Ecn-XR-dfx"/>
+                                <include reference="NnH-D1-OYU"/>
+                                <include reference="Yfm-P6-faN"/>
+                                <include reference="ALt-kF-fRO"/>
+                                <include reference="i51-Cl-Uo8"/>
+                                <include reference="ncm-VD-DCv"/>
+                                <include reference="qSm-Jo-ba6"/>
                             </mask>
                         </variation>
                     </view>
@@ -168,6 +170,17 @@
                                     </mask>
                                 </variation>
                             </mapView>
+                            <toolbar hidden="YES" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jib-A0-nS1">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                                <items>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="4Dv-Ux-bgt"/>
+                                    <barButtonItem systemItem="trash" id="bMI-Ke-VF9">
+                                        <connections>
+                                            <action selector="deleteAction:" destination="0kR-yz-znZ" id="0Px-ig-8pL"/>
+                                        </connections>
+                                    </barButtonItem>
+                                </items>
+                            </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
@@ -176,6 +189,9 @@
                             <constraint firstItem="obc-1h-yDu" firstAttribute="trailing" secondItem="hBa-7n-4rg" secondAttribute="trailing" id="Km7-OJ-hNf"/>
                             <constraint firstAttribute="trailing" secondItem="obc-1h-yDu" secondAttribute="trailing" id="Mgz-DJ-12K"/>
                             <constraint firstItem="obc-1h-yDu" firstAttribute="leading" secondItem="hBa-7n-4rg" secondAttribute="leading" id="Nre-58-KC6"/>
+                            <constraint firstItem="jib-A0-nS1" firstAttribute="leading" secondItem="Wc2-FQ-gIe" secondAttribute="leadingMargin" constant="-20" id="QHL-bD-mKB"/>
+                            <constraint firstItem="ZSh-B0-gq8" firstAttribute="top" secondItem="jib-A0-nS1" secondAttribute="bottom" id="c0h-uW-9MX"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="jib-A0-nS1" secondAttribute="trailing" constant="-20" id="kz5-is-Rug"/>
                             <constraint firstItem="hBa-7n-4rg" firstAttribute="top" secondItem="obc-1h-yDu" secondAttribute="bottom" id="pIc-sO-sYW"/>
                             <constraint firstItem="hBa-7n-4rg" firstAttribute="bottom" secondItem="ZSh-B0-gq8" secondAttribute="top" id="yJA-4J-8rj"/>
                         </constraints>
@@ -183,6 +199,7 @@
                             <mask key="subviews">
                                 <exclude reference="hBa-7n-4rg"/>
                                 <exclude reference="obc-1h-yDu"/>
+                                <exclude reference="jib-A0-nS1"/>
                             </mask>
                             <mask key="constraints">
                                 <exclude reference="1Pi-NW-uqO"/>
@@ -192,12 +209,16 @@
                                 <exclude reference="Nre-58-KC6"/>
                                 <exclude reference="pIc-sO-sYW"/>
                                 <exclude reference="yJA-4J-8rj"/>
+                                <exclude reference="QHL-bD-mKB"/>
+                                <exclude reference="kz5-is-Rug"/>
+                                <exclude reference="c0h-uW-9MX"/>
                             </mask>
                         </variation>
                         <variation key="widthClass=compact">
                             <mask key="subviews">
                                 <include reference="hBa-7n-4rg"/>
                                 <include reference="obc-1h-yDu"/>
+                                <include reference="jib-A0-nS1"/>
                             </mask>
                             <mask key="constraints">
                                 <include reference="1Pi-NW-uqO"/>
@@ -207,29 +228,33 @@
                                 <include reference="Nre-58-KC6"/>
                                 <include reference="pIc-sO-sYW"/>
                                 <include reference="yJA-4J-8rj"/>
+                                <include reference="QHL-bD-mKB"/>
+                                <include reference="kz5-is-Rug"/>
+                                <include reference="c0h-uW-9MX"/>
                             </mask>
                         </variation>
                     </view>
                     <navigationItem key="navigationItem" title="Photos" id="W4n-pk-eoF">
                         <rightBarButtonItems>
-                            <barButtonItem enabled="NO" systemItem="trash" id="Lj7-AD-hOe">
+                            <barButtonItem title="Select" id="Lj7-AD-hOe">
                                 <connections>
-                                    <action selector="deleteButtonAction:" destination="0kR-yz-znZ" id="qRZ-6W-ebJ"/>
+                                    <action selector="selectButtonAction:" destination="0kR-yz-znZ" id="Taj-99-CaV"/>
                                 </connections>
                             </barButtonItem>
                             <barButtonItem systemItem="refresh" id="CqD-ax-GtG">
                                 <connections>
-                                    <action selector="newButtonAction:" destination="0kR-yz-znZ" id="6m8-eN-W1V"/>
+                                    <action selector="refreshButtonAction:" destination="0kR-yz-znZ" id="sFS-U0-f19"/>
                                 </connections>
                             </barButtonItem>
                         </rightBarButtonItems>
                     </navigationItem>
                     <connections>
                         <outlet property="collectionView" destination="hBa-7n-4rg" id="HOo-Hh-Znj"/>
-                        <outlet property="deleteButton" destination="Lj7-AD-hOe" id="rir-U5-tm6"/>
                         <outlet property="flowLayout" destination="K2U-LL-ke7" id="8kG-hW-M5X"/>
                         <outlet property="mapView" destination="obc-1h-yDu" id="WUC-we-kD6"/>
-                        <outlet property="newButton" destination="CqD-ax-GtG" id="oiJ-ln-1Eo"/>
+                        <outlet property="refreshButton" destination="CqD-ax-GtG" id="AFr-Qc-wgb"/>
+                        <outlet property="selectButton" destination="Lj7-AD-hOe" id="Bcp-0c-vja"/>
+                        <outlet property="toolBar" destination="jib-A0-nS1" id="Fnr-Ss-4CN"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yRs-Iw-gw0" userLabel="First Responder" sceneMemberID="firstResponder"/>

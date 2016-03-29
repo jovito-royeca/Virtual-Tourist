@@ -36,4 +36,17 @@ class Pin: NSManagedObject {
         longitude = dictionary[Keys.Longitude] as! Double
         pageNumber = dictionary[Keys.PageNumber] as? Int
     }
+    
+    override func prepareForDeletion() {
+        // remove the subdirectory
+        let docsDirectory: NSURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first!
+        let dir = "\(docsDirectory.path!)/\(latitude!)X\(longitude!)"
+        
+        do {
+            print("deleting... \(dir)")
+            try NSFileManager.defaultManager().removeItemAtPath(dir)
+        } catch let error as NSError {
+            print("Error deleting... \(error.localizedDescription)")
+        }
+    }
 }
