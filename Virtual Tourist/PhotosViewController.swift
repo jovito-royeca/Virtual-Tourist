@@ -50,10 +50,6 @@ class PhotosViewController: UIViewController {
     // MARK: Actions
     @IBAction func refreshButtonAction(sender: UIBarButtonItem) {
         if let pin = pin {
-            let failure = { (error: NSError?) in
-                print("Refresh error... \(error)")
-            }
-            
             refreshButton.enabled = false
             
             if let photos = pin.photos {
@@ -68,8 +64,12 @@ class PhotosViewController: UIViewController {
             pinImageCount = 0
             pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
             CoreDataManager.sharedInstance().saveContext()
-            DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
             
+            let failure = { (error: NSError?) in
+                print("Refresh error... \(error)")
+            }
+            DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
+            checkPinImageCount()
         }
     }
     
@@ -94,6 +94,8 @@ class PhotosViewController: UIViewController {
             let failure = { (error: NSError?) in
                 print("Download error... \(error)")
             }
+            let count = selectedPhotos.count
+            
             for photo in selectedPhotos {
                 if let p = DownloadManager.sharedInstance().findOrCreatePhoto([Photo.Keys.PhotoId: photo.photoId!], pin: pin) {
                     sharedContext.deleteObject(p)
@@ -104,8 +106,9 @@ class PhotosViewController: UIViewController {
             
             pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
             CoreDataManager.sharedInstance().saveContext()
-            let count = pin.photos!.count >= Constants.FlickrParameterValues.PerPageValue ? Constants.FlickrParameterValues.PerPageValue : (Constants.FlickrParameterValues.PerPageValue - pin.photos!.count)
+            
             DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: count, failure: failure)
+            checkPinImageCount()
         }
     }
     
@@ -121,6 +124,19 @@ class PhotosViewController: UIViewController {
             try fetchedResultsController.performFetch()
         } catch {}
         fetchedResultsController.delegate = self
+        
+        if let pin = pin {
+            let failure = { (error: NSError?) in
+                print("Refresh error... \(error)")
+            }
+            
+            let count = pin.photos!.count >= Constants.FlickrParameterValues.PerPageValue ? 0 : (Constants.FlickrParameterValues.PerPageValue - pin.photos!.count)
+            
+            if count > 0 {
+                DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: count, failure: failure)
+            }
+            checkPinImageCount()
+        }
     }
 
     override func viewWillAppear(animated: Bool) {
@@ -140,16 +156,19 @@ class PhotosViewController: UIViewController {
     func checkPinImageCount() {
         if let objects = fetchedResultsController.fetchedObjects {
             if objects.count == 0 {
-                noImagesLabel = UILabel(frame: CGRectMake(0, collectionView.frame.origin.y+100, view.frame.size.width, 40))
-                noImagesLabel!.text = "No Images Found"
-                noImagesLabel!.textColor = UIColor.whiteColor()
-                noImagesLabel!.textAlignment = .Center
-                collectionView.addSubview(noImagesLabel!)
+                if noImagesLabel == nil {
+                    noImagesLabel = UILabel(frame: CGRectMake(0, collectionView.frame.origin.y+100, view.frame.size.width, 40))
+                    noImagesLabel!.text = "No Images Found"
+                    noImagesLabel!.textColor = UIColor.whiteColor()
+                    noImagesLabel!.textAlignment = .Center
+                    collectionView.addSubview(noImagesLabel!)
+                }
             
             } else {
                 if let noImagesLabel = noImagesLabel {
                     noImagesLabel.removeFromSuperview()
                 }
+                noImagesLabel = nil
             }
         }
     }
@@ -191,6 +210,8 @@ class PhotosViewController: UIViewController {
                     if !self.selectOn {
                         self.refreshButton.enabled = self.pinImageCount >= self.pin!.photos?.count
                     }
+                    
+                    self.checkPinImageCount()
                 }
             })
         }

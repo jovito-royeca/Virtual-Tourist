@@ -35,12 +35,12 @@ class DownloadManager: NSObject {
                         
                         for d in photo {
                             if let p = self.findOrCreatePhoto(d, pin: pin) {
-                                self.downloadPhotoImage(p, completion: nil)
-                                
                                 if let owner = self.findOrCreateOwner(d) {
                                     p.owner = owner
                                     CoreDataManager.sharedInstance().saveContext()
                                 }
+                                
+                                self.downloadPhotoImage(p, completion: nil)
                             }
                         }
                         
@@ -100,14 +100,14 @@ class DownloadManager: NSObject {
                     }
                 }
                 photo!.pin = pin
-                CoreDataManager.sharedInstance().saveContext()
                 
                 if let tags = dict["tags"] as? String {
                     if let setTags = findOrCreateTags(tags) {
                         photo!.tags = setTags
-                        CoreDataManager.sharedInstance().saveContext()
                     }
                 }
+                
+                CoreDataManager.sharedInstance().saveContext()
             }
             
         } catch let error as NSError {
@@ -141,13 +141,11 @@ class DownloadManager: NSObject {
     }
     
     func findOrCreateTags(string: String) -> NSSet? {
-        var tags = Array<Tag>()
-        
-        let charSet = NSCharacterSet.whitespaceCharacterSet()
-        let trimmedString = string.stringByTrimmingCharactersInSet(charSet)
-        if trimmedString == "" {
+        if isStringEmpty(string) {
             return nil
         }
+        
+        var tags = Array<Tag>()
         
         for component in string.componentsSeparatedByString(" ") {
             var tag:Tag?
@@ -169,6 +167,12 @@ class DownloadManager: NSObject {
         }
         
         return tags.count > 0 ? NSSet(array: tags) : nil
+    }
+    
+    func isStringEmpty(string: String) -> Bool {
+        let charSet = NSCharacterSet.whitespaceCharacterSet()
+        let trimmedString = string.stringByTrimmingCharactersInSet(charSet)
+        return trimmedString == "" ? true : false
     }
     
     func downloadPhotoImage(photo: Photo, completion: ((filePath: String) -> Void)?) {
