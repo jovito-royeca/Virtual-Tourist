@@ -175,6 +175,15 @@ class PhotosViewController: UIViewController {
                     MBProgressHUD.hideHUDForView(cell, animated: true)
                     cell.hasHUD = false
                     collectionView.reloadItemsAtIndexPaths([indexPath])
+                } else {
+                    // TODO: 
+//                    if !cell.hasHUD {
+//                        MBProgressHUD.showHUDAddedTo(cell, animated: true)
+//                        cell.hasHUD = true
+//                    }
+//                    if let p = DownloadManager.sharedInstance().findOrCreatePhoto([Photo.Keys.PhotoId: photo.photoId!], pin: pin!) {
+//                        configureCell(cell, photo: p, indexPath: indexPath)
+//                    }
                 }
                 
             } else {

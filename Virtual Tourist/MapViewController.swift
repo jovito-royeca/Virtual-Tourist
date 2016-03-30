@@ -30,6 +30,7 @@ class MapViewController: UIViewController {
     var savedRegion:MKCoordinateRegion?
     var editingOn = false
     var startDragCoordinate:CLLocationCoordinate2D?
+    var currentPin:Pin?
     
     // MARK: Overrides
     override func viewDidLoad() {
@@ -72,31 +73,44 @@ class MapViewController: UIViewController {
     
     // MARK: Actions
     @IBAction func longPressAction(sender: UILongPressGestureRecognizer) {
-        if sender.state != .Began || editingOn {
-            return
+        if editingOn {
+           return
         }
         
         let touchPoint = sender.locationInView(mapView)
-        let touchMapCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = touchMapCoordinate
-        mapView.addAnnotation(annotation)
+        let location = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
         
-        let dictionary: [String : AnyObject] = [
-            Pin.Keys.Latitude : annotation.coordinate.latitude,
-            Pin.Keys.Longitude : annotation.coordinate.longitude,
-            Pin.Keys.PageNumber : 1
-        ]
-        
-        // Now we create a new Pin, using the shared Context
-        let pin = Pin(dictionary: dictionary, context: sharedContext)
-        CoreDataManager.sharedInstance().saveContext()
-        let failure = { (error: NSError?) in
-            print("error=\(error)")
+        switch sender.state {
+            case .Began:
+                // create the pin
+                let dictionary: [String : AnyObject] = [
+                    Pin.Keys.Latitude : location.latitude,
+                    Pin.Keys.Longitude : location.longitude,
+                    Pin.Keys.PageNumber : 1
+                ]
+                currentPin = Pin(dictionary: dictionary, context: sharedContext)
+                
+            case .Changed:
+                // update the pin's location based on drag gesture
+                currentPin?.latitude = location.latitude
+                currentPin?.longitude = location.longitude
+            case .Ended:
+                // create annotation and save to Core Data
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = location
+                mapView.addAnnotation(annotation)
+            
+                CoreDataManager.sharedInstance().saveContext()
+                let failure = { (error: NSError?) in
+                    print("error=\(error)")
+                }
+                
+                // download images for the pin immidiately
+                DownloadManager.sharedInstance().downloadImagesForPin(currentPin!, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
+            
+            default:
+                return
         }
-        
-        // download images for the pin immidiately
-        DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
     }
     
     @IBAction func editAction(sender: UIBarButtonItem) {
