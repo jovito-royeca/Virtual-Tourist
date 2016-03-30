@@ -263,7 +263,7 @@
                     </view>
                     <navigationItem key="navigationItem" title="Photos" id="W4n-pk-eoF">
                         <rightBarButtonItems>
-                            <barButtonItem title="Select" id="Lj7-AD-hOe">
+                            <barButtonItem enabled="NO" title="Select" id="Lj7-AD-hOe">
                                 <connections>
                                     <action selector="selectButtonAction:" destination="0kR-yz-znZ" id="Taj-99-CaV"/>
                                 </connections>

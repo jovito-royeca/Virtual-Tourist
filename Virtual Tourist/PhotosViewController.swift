@@ -51,6 +51,7 @@ class PhotosViewController: UIViewController {
     @IBAction func refreshButtonAction(sender: UIBarButtonItem) {
         if let pin = pin {
             refreshButton.enabled = false
+            selectButton.enabled = false
             
             if let photos = pin.photos {
                 for photo in photos.allObjects {
@@ -77,8 +78,9 @@ class PhotosViewController: UIViewController {
     @IBAction func selectButtonAction(sender: UIBarButtonItem) {
         selectOn = !selectOn
         refreshButton.enabled = !selectOn && pinImageCount >= pin!.photos?.count
+        selectButton.title = selectOn ? "Done" : "Select"
         toolBar.hidden = !selectOn
-        selectButton.title = selectOn ? "Cancel" : "Select"
+        
         
         if !selectOn {
             selectedPhotos.removeAll()
@@ -91,9 +93,6 @@ class PhotosViewController: UIViewController {
     
     @IBAction func deleteAction(sender: UIBarButtonItem) {
         if let pin = pin {
-            let failure = { (error: NSError?) in
-                print("Download error... \(error)")
-            }
             let count = selectedPhotos.count
             
             for photo in selectedPhotos {
@@ -107,6 +106,9 @@ class PhotosViewController: UIViewController {
             pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
             CoreDataManager.sharedInstance().saveContext()
             
+            let failure = { (error: NSError?) in
+                print("Download error... \(error)")
+            }
             DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: count, failure: failure)
             checkPinImageCount()
         }
@@ -126,13 +128,12 @@ class PhotosViewController: UIViewController {
         fetchedResultsController.delegate = self
         
         if let pin = pin {
-            let failure = { (error: NSError?) in
-                print("Refresh error... \(error)")
-            }
-            
             let count = pin.photos!.count >= Constants.FlickrParameterValues.PerPageValue ? 0 : (Constants.FlickrParameterValues.PerPageValue - pin.photos!.count)
             
             if count > 0 {
+                let failure = { (error: NSError?) in
+                    print("Refresh error... \(error)")
+                }
                 DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: count, failure: failure)
             }
             checkPinImageCount()
@@ -209,6 +210,7 @@ class PhotosViewController: UIViewController {
                     self.pinImageCount++
                     if !self.selectOn {
                         self.refreshButton.enabled = self.pinImageCount >= self.pin!.photos?.count
+                        self.selectButton.enabled = self.pinImageCount >= 1
                     }
                     
                     self.checkPinImageCount()

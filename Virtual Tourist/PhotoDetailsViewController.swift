@@ -35,7 +35,7 @@ class PhotoDetailsViewController: UIViewController {
             }
             
             if let title = photo.title {
-                titleString = "\(title)\n"
+                titleString = "\(title)\n\n"
             }
             if let owner = photo.owner {
                 if let ownerName = owner.ownerName {

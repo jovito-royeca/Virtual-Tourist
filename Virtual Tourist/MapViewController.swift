@@ -117,13 +117,12 @@ class MapViewController: UIViewController {
     // MARK: Utility methods
     func createPin(dictionary: [String: AnyObject]) {
         let pin = Pin(dictionary: dictionary, context: sharedContext)
-        
         CoreDataManager.sharedInstance().saveContext()
+        
+        // download images for the pin immidiately
         let failure = { (error: NSError?) in
             print("error=\(error)")
         }
-        
-        // download images for the pin immidiately
         DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
     }
     
