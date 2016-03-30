@@ -98,8 +98,10 @@ class DownloadManager: NSObject {
                 CoreDataManager.sharedInstance().saveContext()
                 
                 if let tags = dict["tags"] as? String {
-                    photo!.tags = findOrCreateTags(tags)
-                    CoreDataManager.sharedInstance().saveContext()
+                    if let setTags = findOrCreateTags(tags) {
+                        photo!.tags = setTags
+                        CoreDataManager.sharedInstance().saveContext()
+                    }
                 }
             }
             
@@ -116,7 +118,7 @@ class DownloadManager: NSObject {
         let charSet = NSCharacterSet.whitespaceCharacterSet()
         let trimmedString = string.stringByTrimmingCharactersInSet(charSet)
         if trimmedString == "" {
-            return NSSet(array: tags)
+            return nil
         }
         
         for component in string.componentsSeparatedByString(" ") {
@@ -138,7 +140,7 @@ class DownloadManager: NSObject {
             }
         }
         
-        return NSSet(array: tags)
+        return tags.count > 0 ? NSSet(array: tags) : nil
     }
     
     func downloadPhotoImage(photo: Photo, completion: ((filePath: String) -> Void)?) {
@@ -158,24 +160,9 @@ class DownloadManager: NSObject {
             
             // download the image if not yet existing
             if !NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
-                // let's create a temporary file to mark it as being downloaded
-                let string = "placeholder"
-                let data = NSData(data: string.dataUsingEncoding(NSUTF8StringEncoding)!)
-                NSFileManager.defaultManager().createFileAtPath(fullPath, contents: data, attributes: nil)
-                
-                
                 let httpMethod:HTTPMethod = .Get
                 
                 let success = { (results: AnyObject!) in
-                    // delete the temporary file before writing the image data
-                    if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
-                        do {
-                            try NSFileManager.defaultManager().removeItemAtPath(fullPath)
-                        } catch let error as NSError {
-                            print("Error deleting... \(error.localizedDescription)")
-                        }
-                    }
-
                     // now let's write the image file
                     let imageData = results as! NSData
                     imageData.writeToFile(fullPath as String, atomically: true)
@@ -187,21 +174,17 @@ class DownloadManager: NSObject {
                 }
                 
                 let failure = { (error: NSError?) in
-                    print("error=\(error)")
+                    print("Error downloading image... =\(error)")
                     
-                    // delete the file so it can be downloaded again
-                    if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
-                        do {
-                            try NSFileManager.defaultManager().removeItemAtPath(fullPath)
-                        } catch let error as NSError {
-                            print("Error deleting... \(error.localizedDescription)")
-                        }
+                    if let completion = completion {
+                        completion(filePath: fullPath)
                     }
                 }
                 
                 NetworkManager.sharedInstance().exec(httpMethod, urlString: photo.urlPath, headers: nil, parameters: nil, values: nil, body: nil, dataOffset: 0, isJSON: false, success: success, failure: failure)
                 
             } else {
+                
                 if let completion = completion {
                     completion(filePath: fullPath)
                 }

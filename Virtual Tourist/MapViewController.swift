@@ -29,7 +29,7 @@ class MapViewController: UIViewController {
     // MARK: Variables
     var savedRegion:MKCoordinateRegion?
     var editingOn = false
-    var startDragCoordinate:CLLocationCoordinate2D?
+    var currentAnnotation:MKPointAnnotation?
     var currentPin:Pin?
     
     // MARK: Overrides
@@ -82,31 +82,21 @@ class MapViewController: UIViewController {
         
         switch sender.state {
             case .Began:
+                currentAnnotation = MKPointAnnotation()
+                currentAnnotation!.coordinate = location
+                mapView.addAnnotation(currentAnnotation!)
+            
+            case .Changed:
+                // update the pin's location based on drag gesture
+                currentAnnotation!.coordinate = location
+            case .Ended:
                 // create the pin
                 let dictionary: [String : AnyObject] = [
                     Pin.Keys.Latitude : location.latitude,
                     Pin.Keys.Longitude : location.longitude,
                     Pin.Keys.PageNumber : 1
                 ]
-                currentPin = Pin(dictionary: dictionary, context: sharedContext)
-                
-            case .Changed:
-                // update the pin's location based on drag gesture
-                currentPin?.latitude = location.latitude
-                currentPin?.longitude = location.longitude
-            case .Ended:
-                // create annotation and save to Core Data
-                let annotation = MKPointAnnotation()
-                annotation.coordinate = location
-                mapView.addAnnotation(annotation)
-            
-                CoreDataManager.sharedInstance().saveContext()
-                let failure = { (error: NSError?) in
-                    print("error=\(error)")
-                }
-                
-                // download images for the pin immidiately
-                DownloadManager.sharedInstance().downloadImagesForPin(currentPin!, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
+                createPin(dictionary)
             
             default:
                 return
@@ -125,6 +115,27 @@ class MapViewController: UIViewController {
     }
     
     // MARK: Utility methods
+    func createPin(dictionary: [String: AnyObject]) {
+        let pin = Pin(dictionary: dictionary, context: sharedContext)
+        
+        CoreDataManager.sharedInstance().saveContext()
+        let failure = { (error: NSError?) in
+            print("error=\(error)")
+        }
+        
+        // download images for the pin immidiately
+        DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
+    }
+    
+    func deletePin(pin: Pin) {
+        if let photos = pin.photos {
+            for photo in photos.allObjects {
+                sharedContext.deleteObject(photo as! NSManagedObject)
+            }
+        }
+        sharedContext.deleteObject(pin)
+        CoreDataManager.sharedInstance().saveContext()
+    }
 }
 
 // MARK: MKMapViewDelegate
@@ -138,21 +149,22 @@ extension MapViewController : MKMapViewDelegate {
         NSUserDefaults.standardUserDefaults().setDouble(savedRegion!.span.longitudeDelta, forKey: Keys.LongitudeDelta)
     }
     
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+        let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
+        annotationView.draggable = true
+        
+        return annotationView
+    }
+    
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         if let annotation = mapView.selectedAnnotations.first as? MKPointAnnotation {
         
             if editingOn {
                 mapView.removeAnnotation(annotation)
                 
-                // delete Location from Core Data
+                // delete Pin from Core Data
                 if let pin = DownloadManager.sharedInstance().findOrCreatePin(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude) {
-                    if let photos = pin.photos {
-                        for photo in photos.allObjects {
-                            sharedContext.deleteObject(photo as! NSManagedObject)
-                        }
-                    }
-                    sharedContext.deleteObject(pin)
-                    CoreDataManager.sharedInstance().saveContext()
+                    deletePin(pin)
                 }
                 
             } else {
@@ -170,19 +182,30 @@ extension MapViewController : MKMapViewDelegate {
         }
     }
     
-    // TODO: Implement dragging pins to change location
+    // BUG: dragging pins does not work because mapView:didSelectAnnotationView: takes precedence
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+        let location = view.annotation!.coordinate
         
-        if newState == .Starting {
-            startDragCoordinate = view.annotation!.coordinate
-        }
+        switch newState {
+            case .Starting:
+                currentPin = DownloadManager.sharedInstance().findOrCreatePin(location.latitude, longitude: location.longitude)
             
-        else if newState == .Ending {
-            if let pin = DownloadManager.sharedInstance().findOrCreatePin(startDragCoordinate!.latitude, longitude: startDragCoordinate!.longitude) {
-                pin.latitude = NSNumber(double: view.annotation!.coordinate.latitude)
-                pin.longitude = NSNumber(double: view.annotation!.coordinate.longitude)
-                CoreDataManager.sharedInstance().saveContext()
-            }
+            case .Ending:
+                // delete the current pin
+                if let currentPin = currentPin {
+                    deletePin(currentPin)
+                }
+            
+                // then create a new one
+                let dictionary: [String : AnyObject] = [
+                    Pin.Keys.Latitude : location.latitude,
+                    Pin.Keys.Longitude : location.longitude,
+                    Pin.Keys.PageNumber : 1
+                ]
+                createPin(dictionary)
+            
+            default:
+                return
         }
     }
 }

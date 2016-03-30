@@ -15,7 +15,6 @@ import MBProgressHUD
 class PhotosViewController: UIViewController {
 
     // MARK: Outlets
-    
     @IBOutlet weak var refreshButton: UIBarButtonItem!
     @IBOutlet weak var selectButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
@@ -31,6 +30,7 @@ class PhotosViewController: UIViewController {
     var selectOn = false
     var noImagesLabel:UILabel?
     var selectedPhotos = Array<Photo>()
+    var pinImageCount = 0
     
     lazy var fetchedResultsController: NSFetchedResultsController = {
         
@@ -49,10 +49,6 @@ class PhotosViewController: UIViewController {
     
     // MARK: Actions
     @IBAction func refreshButtonAction(sender: UIBarButtonItem) {
-        if let noImagesLabel = noImagesLabel {
-            noImagesLabel.removeFromSuperview()
-        }
-        
         if let pin = pin {
             let failure = { (error: NSError?) in
                 print("Refresh error... \(error)")
@@ -76,7 +72,6 @@ class PhotosViewController: UIViewController {
     
     @IBAction func selectButtonAction(sender: UIBarButtonItem) {
         selectOn = !selectOn
-//        navigationController?.navigationBar.Item.backBarButtonItem?.enabled = !selectOn
         refreshButton.enabled = !selectOn
         toolBar.hidden = !selectOn
         selectButton.title = selectOn ? "Cancel" : "Select"
@@ -125,19 +120,10 @@ class PhotosViewController: UIViewController {
 
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
+        
         mapView.region = region!
         mapView.setCenterCoordinate(region!.center, animated: true)
         mapView.addAnnotation(annotation!)
-        
-        if let objects = fetchedResultsController.fetchedObjects {
-            if objects.count == 0 {
-                noImagesLabel = UILabel(frame: CGRectMake(0, collectionView.frame.origin.y+100, view.frame.size.width, 40))
-                noImagesLabel!.text = "No Images Found"
-                noImagesLabel!.textColor = UIColor.whiteColor()
-                noImagesLabel!.textAlignment = .Center
-                collectionView.addSubview(noImagesLabel!)
-            }
-        }
     }
     
     // MARK: - Core Data Convenience. This will be useful for fetching. And for adding and saving objects as well.
@@ -146,6 +132,23 @@ class PhotosViewController: UIViewController {
     }
     
     // MARK: Utility methods
+    func checkPinImageCount() {
+        if let objects = fetchedResultsController.fetchedObjects {
+            if objects.count == 0 {
+                noImagesLabel = UILabel(frame: CGRectMake(0, collectionView.frame.origin.y+100, view.frame.size.width, 40))
+                noImagesLabel!.text = "No Images Found"
+                noImagesLabel!.textColor = UIColor.whiteColor()
+                noImagesLabel!.textAlignment = .Center
+                collectionView.addSubview(noImagesLabel!)
+            
+            } else {
+                if let noImagesLabel = noImagesLabel {
+                    noImagesLabel.removeFromSuperview()
+                }
+            }
+        }
+    }
+    
     private func setupCollectionView() {
         let space: CGFloat = 1.0
         let dimension = (view.frame.size.width - (3*space)) / 4.0
@@ -163,43 +166,23 @@ class PhotosViewController: UIViewController {
                 break
             }
         }
+        
         cell.checkImage.hidden = !isSelected
         cell.photoView.image = nil
         
         if let fullPath = photo.fullPath {
-            if NSFileManager.defaultManager().fileExistsAtPath(fullPath) {
-                // let's check if we are reading an image file or a temporary file
-                let imageData = NSData(contentsOfFile: fullPath)
-                if let image = UIImage(data: imageData!) {
-                    cell.photoView.image = image
+            if !cell.hasHUD {
+                MBProgressHUD.showHUDAddedTo(cell, animated: true)
+                cell.hasHUD = true
+            }
+            
+            DownloadManager.sharedInstance().downloadPhotoImage(photo, completion: { (filePath: String) in
+                performUIUpdatesOnMain {
+                    cell.photoView.image = UIImage(contentsOfFile: fullPath)
                     MBProgressHUD.hideHUDForView(cell, animated: true)
                     cell.hasHUD = false
-                    collectionView.reloadItemsAtIndexPaths([indexPath])
-                } else {
-                    // TODO: 
-//                    if !cell.hasHUD {
-//                        MBProgressHUD.showHUDAddedTo(cell, animated: true)
-//                        cell.hasHUD = true
-//                    }
-//                    if let p = DownloadManager.sharedInstance().findOrCreatePhoto([Photo.Keys.PhotoId: photo.photoId!], pin: pin!) {
-//                        configureCell(cell, photo: p, indexPath: indexPath)
-//                    }
                 }
-                
-            } else {
-                if !cell.hasHUD {
-                    MBProgressHUD.showHUDAddedTo(cell, animated: true)
-                    cell.hasHUD = true
-                }
-                
-                DownloadManager.sharedInstance().downloadPhotoImage(photo, completion: { (filePath: String) in
-                    performUIUpdatesOnMain {
-                        cell.photoView.image = UIImage(contentsOfFile: filePath)
-                        MBProgressHUD.hideHUDForView(cell, animated: true)
-                        cell.hasHUD = false
-                    }
-                })
-            }
+            })
         }
     }
 }

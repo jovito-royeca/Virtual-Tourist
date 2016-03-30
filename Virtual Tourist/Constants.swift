@@ -10,6 +10,8 @@ import Foundation
 
 struct Constants {
     
+    static let ImageDownloaded = "ImageDownloaded"
+    
     // MARK: Flickr
     struct Flickr {
         static let ApiScheme = "https"
@@ -44,7 +46,7 @@ struct Constants {
         static let DisableJSONCallback = "1" /* 1 means "yes" */
         static let GalleryPhotosMethod = "flickr.galleries.getPhotos"
         static let UseSafeSearch = "1"
-        static let PerPageValue = 21
+        static let PerPageValue = 28
         static let ExtrasValue = "url_m,description,tags"
     }
 }
