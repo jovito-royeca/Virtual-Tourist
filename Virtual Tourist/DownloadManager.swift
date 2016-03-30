@@ -36,6 +36,11 @@ class DownloadManager: NSObject {
                         for d in photo {
                             if let p = self.findOrCreatePhoto(d, pin: pin) {
                                 self.downloadPhotoImage(p, completion: nil)
+                                
+                                if let owner = self.findOrCreateOwner(d) {
+                                    p.owner = owner
+                                    CoreDataManager.sharedInstance().saveContext()
+                                }
                             }
                         }
                         
@@ -110,6 +115,29 @@ class DownloadManager: NSObject {
         }
         
         return photo
+    }
+    
+    func findOrCreateOwner(dict: Dictionary<String, AnyObject>) -> Owner? {
+        var owner:Owner?
+        
+        let fetchRequest = NSFetchRequest(entityName: "Owner")
+        let ownerId = dict[Owner.Keys.OwnerId] as? String
+        
+        fetchRequest.predicate = NSPredicate(format: "ownerId == %@", ownerId!)
+        do {
+            if let o = try sharedContext.executeFetchRequest(fetchRequest).first as? Owner {
+                owner = o
+                
+            } else {
+                owner = Owner(dictionary: dict, context: sharedContext)
+                CoreDataManager.sharedInstance().saveContext()
+            }
+            
+        } catch let error as NSError {
+            print("Error in fetch \(error), \(error.userInfo)")
+        }
+        
+        return owner
     }
     
     func findOrCreateTags(string: String) -> NSSet? {

@@ -54,6 +54,8 @@ class PhotosViewController: UIViewController {
                 print("Refresh error... \(error)")
             }
             
+            refreshButton.enabled = false
+            
             if let photos = pin.photos {
                 for photo in photos.allObjects {
                     let photoObject = photo as! Photo
@@ -63,16 +65,18 @@ class PhotosViewController: UIViewController {
                 }
             }
             
+            pinImageCount = 0
             pin.pageNumber = NSNumber(int: pin.pageNumber!.integerValue+1)
             CoreDataManager.sharedInstance().saveContext()
             DownloadManager.sharedInstance().downloadImagesForPin(pin, howMany: Constants.FlickrParameterValues.PerPageValue, failure: failure)
+            
         }
     }
     
     
     @IBAction func selectButtonAction(sender: UIBarButtonItem) {
         selectOn = !selectOn
-        refreshButton.enabled = !selectOn
+        refreshButton.enabled = !selectOn && pinImageCount >= pin!.photos?.count
         toolBar.hidden = !selectOn
         selectButton.title = selectOn ? "Cancel" : "Select"
         
@@ -93,6 +97,7 @@ class PhotosViewController: UIViewController {
             for photo in selectedPhotos {
                 if let p = DownloadManager.sharedInstance().findOrCreatePhoto([Photo.Keys.PhotoId: photo.photoId!], pin: pin) {
                     sharedContext.deleteObject(p)
+                    pinImageCount--
                 }
             }
             selectedPhotos.removeAll()
@@ -181,6 +186,11 @@ class PhotosViewController: UIViewController {
                     cell.photoView.image = UIImage(contentsOfFile: fullPath)
                     MBProgressHUD.hideHUDForView(cell, animated: true)
                     cell.hasHUD = false
+                    
+                    self.pinImageCount++
+                    if !self.selectOn {
+                        self.refreshButton.enabled = self.pinImageCount >= self.pin!.photos?.count
+                    }
                 }
             })
         }

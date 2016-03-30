@@ -11,6 +11,7 @@ import UIKit
 class PhotoDetailsViewController: UIViewController {
 
     // MARK: Outlets
+    @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var photoView: UIImageView!
     @IBOutlet weak var tagsLabel: UILabel!
     
@@ -26,28 +27,34 @@ class PhotoDetailsViewController: UIViewController {
 
     override func viewWillAppear(animated: Bool) {
         if let photo = photo {
+            var titleString = ""
+            var tagsString = ""
+            
             if let fullPath = photo.fullPath {
                 photoView.image = UIImage(contentsOfFile: fullPath)
             }
             
             if let title = photo.title {
-                navigationItem.title = title
+                titleString = "\(title)\n"
             }
-            
-            var string = ""
+            if let owner = photo.owner {
+                if let ownerName = owner.ownerName {
+                    titleString += "By \(ownerName)"
+                }
+            }
+            titleLabel.text = titleString
             
             if let description_ = photo.description_ {
-                string = "\(description_)\n\n"
+                tagsString = "\(description_)\n\n"
             }
             
             if let tags = photo.tags {
                 for tag in tags {
                     let t = tag as! Tag
-                    string += "#\(t.name!) "
+                    tagsString += "#\(t.name!) "
                 }
             }
-            
-            tagsLabel.text = string
+            tagsLabel.text = tagsString
         }
     }
 }

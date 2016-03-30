@@ -47,6 +47,6 @@ struct Constants {
         static let GalleryPhotosMethod = "flickr.galleries.getPhotos"
         static let UseSafeSearch = "1"
         static let PerPageValue = 28
-        static let ExtrasValue = "url_m,description,tags"
+        static let ExtrasValue = "url_m,description,tags,owner_name"
     }
 }

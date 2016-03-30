@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="9525" systemVersion="14F1605" minimumToolsVersion="Automatic">
+    <entity name="Owner" representedClassName=".Owner" syncable="YES">
+        <attribute name="ownerId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="ownerName" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="photos" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Photo" inverseName="owner" inverseEntity="Photo" syncable="YES"/>
+    </entity>
     <entity name="Photo" representedClassName=".Photo" syncable="YES">
         <attribute name="description_" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="filePath" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="photoId" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="title" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="urlPath" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="owner" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Owner" inverseName="photos" inverseEntity="Owner" syncable="YES"/>
         <relationship name="pin" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Pin" inverseName="photos" inverseEntity="Pin" syncable="YES"/>
         <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Tag" inverseName="photos" inverseEntity="Tag" syncable="YES"/>
     </entity>
@@ -20,8 +26,9 @@
         <relationship name="photos" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Photo" inverseName="tags" inverseEntity="Photo" syncable="YES"/>
     </entity>
     <elements>
-        <element name="Photo" positionX="-54" positionY="18" width="128" height="150"/>
+        <element name="Photo" positionX="-54" positionY="18" width="128" height="165"/>
         <element name="Pin" positionX="-63" positionY="-18" width="128" height="105"/>
         <element name="Tag" positionX="-63" positionY="45" width="128" height="75"/>
+        <element name="Owner" positionX="-63" positionY="63" width="128" height="90"/>
     </elements>
 </model>
