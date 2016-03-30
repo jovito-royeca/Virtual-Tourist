@@ -147,16 +147,16 @@ class DownloadManager: NSObject {
         
         var tags = Array<Tag>()
         
-        for component in string.componentsSeparatedByString(" ") {
+        for name in string.componentsSeparatedByString(" ") {
             var tag:Tag?
             let fetchRequest = NSFetchRequest(entityName: "Tag")
-            fetchRequest.predicate = NSPredicate(format: "name == %@", component)
+            fetchRequest.predicate = NSPredicate(format: "name == %@", name)
             
             do {
                 if let t = try sharedContext.executeFetchRequest(fetchRequest).first as? Tag {
                     tag = t
                 } else {
-                    tag = Tag(dictionary: ["name": component], context: sharedContext)
+                    tag = Tag(dictionary: ["name": name], context: sharedContext)
                 }
                 CoreDataManager.sharedInstance().saveContext()
                 
